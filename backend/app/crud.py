@@ -1,15 +1,13 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 
-# Listar competições
+# Competições
 def get_competicoes(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Competicao).offset(skip).limit(limit).all()
 
-# Buscar competição por ID
 def get_competicao(db: Session, comp_id: int):
     return db.query(models.Competicao).filter(models.Competicao.id_competicao == comp_id).first()
 
-# Criar nova competição
 def create_competicao(db: Session, comp: schemas.CompeticaoCreate):
     db_comp = models.Competicao(
         nome=comp.nome,
@@ -23,16 +21,24 @@ def create_competicao(db: Session, comp: schemas.CompeticaoCreate):
     return db_comp
 
 # Usuários
-def get_usuarios(db: Session, skip=0, limit=100):
+def get_usuarios(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Usuario).offset(skip).limit(limit).all()
 
 def get_usuario(db: Session, user_id: int):
-    return db.query(models.Usuario).filter(models.Usuario.id_usuario==user_id).first()
+    return db.query(models.Usuario).filter(models.Usuario.id_usuario == user_id).first()
 
-def create_usuario(db: Session, u: schemas.UsuarioCreate):
-    db_user = models.Usuario(nome=u.nome, email=u.email, senha_hash=u.senha_hash, tipo=u.tipo)
-    db.add(db_user); db.commit(); db.refresh(db_user)
+def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
+    db_user = models.Usuario(
+        nome=usuario.nome,
+        email=usuario.email,
+        senha_hash=usuario.senha_hash,
+        tipo=usuario.tipo
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
     return db_user
+
 
 # Equipes
 def get_equipes(db: Session, skip=0, limit=100):
@@ -83,6 +89,56 @@ def create_submissao(db: Session, s: schemas.SubmissaoCreate):
     return db_s
 
 # Estatísticas (list + opcional call da procedure)
-def get_estatisticas(db: Session, skip=0, limit=100):
+def get_estatisticas(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Estatistica).offset(skip).limit(limit).all()
 
+def get_estatistica(db: Session, estat_id: int):
+    return db.query(models.Estatistica).filter(models.Estatistica.id_estatistica == estat_id).first()
+
+# Colaboradores
+def get_colaboradores(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Colaborador).offset(skip).limit(limit).all()
+
+def get_colaborador(db: Session, user_id: int):
+    return db.query(models.Colaborador).filter(models.Colaborador.id_usuario == user_id).first()
+
+def create_colaborador(db: Session, c: schemas.ColaboradorCreate):
+    db_c = models.Colaborador(
+        id_usuario=c.id_usuario,
+        papel=c.papel,
+        id_equipe=c.id_equipe
+    )
+    db.add(db_c); db.commit(); db.refresh(db_c)
+    return db_c
+
+# Participantes
+def get_participantes(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Participante).offset(skip).limit(limit).all()
+
+def get_participante(db: Session, user_id: int):
+    return db.query(models.Participante).filter(models.Participante.id_usuario == user_id).first()
+
+def create_participante(db: Session, p: schemas.ParticipanteCreate):
+    db_p = models.Participante(
+        id_usuario=p.id_usuario,
+        universidade=p.universidade,
+        foto=None
+    )
+    db.add(db_p); db.commit(); db.refresh(db_p)
+    return db_p
+
+# Patrocinadores
+def get_patrocinadores(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Patrocinador).offset(skip).limit(limit).all()
+
+def get_patrocinador(db: Session, user_id: int):
+    return db.query(models.Patrocinador).filter(models.Patrocinador.id_usuario == user_id).first()
+
+def create_patrocinador(db: Session, p: schemas.PatrocinadorCreate):
+    db_p = models.Patrocinador(
+        id_usuario=p.id_usuario,
+        contribuicao=p.contribuicao,
+        logotipo=None
+    )
+    db.add(db_p); db.commit(); db.refresh(db_p)
+    return db_p

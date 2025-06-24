@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from . import models
-from .routers import (competicoes, usuarios, equipes, 
-                      inscricoes, problemas, submissoes,
-                      estatisticas)
+from .routers import (competicoes, usuarios, equipes, inscricoes, problemas,
+                      submissoes, estatisticas, colaboradores, participantes,
+                      patrocinadores)
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,6 +25,9 @@ app.include_router(inscricoes.router)
 app.include_router(problemas.router)
 app.include_router(submissoes.router)
 app.include_router(estatisticas.router)
+app.include_router(colaboradores.router)
+app.include_router(participantes.router)
+app.include_router(patrocinadores.router)
 
 @app.get("/")
 def read_root():

@@ -1,17 +1,15 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
 
-load_dotenv()  # carrega .env
+# ...
+load_dotenv(encoding="utf-8")
+DATABASE_URL = os.getenv("DATABASE_URL")
+print("→ carregou DATABASE_URL:", repr(DATABASE_URL))   # <— adicione isto
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:Senha123@localhost:5432/marathon"
-)
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

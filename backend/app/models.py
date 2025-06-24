@@ -25,9 +25,9 @@ class ColaboradorPapel(enum.Enum):
     organizador = "organizador"
 
 class ProblemaNivel(enum.Enum):
-    facil = "fácil"
-    medio = "médio"
-    dificil = "difícil"
+    fácil = "fácil"
+    médio = "médio"
+    difícil = "difícil"
 
 class SubmissaoStatus(enum.Enum):
     aceito = "aceito"
