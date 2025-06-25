@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from .security import hash_password
 
 # Competições
 def get_competicoes(db: Session, skip: int = 0, limit: int = 100):
@@ -47,10 +48,11 @@ def get_usuario(db: Session, user_id: int):
     return db.query(models.Usuario).filter(models.Usuario.id_usuario == user_id).first()
 
 def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
+    hashed = hash_password(usuario.senha_hash)
     db_user = models.Usuario(
         nome=usuario.nome,
         email=usuario.email,
-        senha_hash=usuario.senha_hash,
+        senha_hash=hashed,
         tipo=usuario.tipo
     )
     db.add(db_user)
