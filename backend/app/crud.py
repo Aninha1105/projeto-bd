@@ -20,6 +20,25 @@ def create_competicao(db: Session, comp: schemas.CompeticaoCreate):
     db.refresh(db_comp)
     return db_comp
 
+def update_competicao(db: Session, comp_id: int, comp_in: schemas.CompeticaoCreate):
+    db_comp = get_competicao(db, comp_id)
+    if not db_comp:
+        return None
+    for field, value in comp_in.dict(exclude_unset=True).items():
+        setattr(db_comp, field, value)
+    db.commit()
+    db.refresh(db_comp)
+    return db_comp
+
+def delete_competicao(db: Session, comp_id: int):
+    db_comp = get_competicao(db, comp_id)
+    if not db_comp:
+        return False
+    db.delete(db_comp)
+    db.commit()
+    return True
+
+
 # Usuários
 def get_usuarios(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Usuario).offset(skip).limit(limit).all()
@@ -39,6 +58,22 @@ def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
     db.refresh(db_user)
     return db_user
 
+def update_usuario(db: Session, user_id: int, u_in: schemas.UsuarioCreate):
+    db_user = get_usuario(db, user_id)
+    if not db_user:
+        return None
+    for field, value in u_in.dict(exclude_unset=True).items():
+        setattr(db_user, field, value)
+    db.commit(); db.refresh(db_user)
+    return db_user
+
+
+def delete_usuario(db: Session, user_id: int):
+    db_user = get_usuario(db, user_id)
+    if not db_user:
+        return False
+    db.delete(db_user); db.commit()
+    return True
 
 # Equipes
 def get_equipes(db: Session, skip=0, limit=100):
@@ -52,6 +87,22 @@ def create_equipe(db: Session, e: schemas.EquipeCreate):
     db.add(db_e); db.commit(); db.refresh(db_e)
     return db_e
 
+def update_equipe(db: Session, eq_id: int, e_in: schemas.EquipeCreate):
+    db_e = get_equipe(db, eq_id)
+    if not db_e:
+        return None
+    db_e.nome = e_in.nome
+    db.commit(); db.refresh(db_e)
+    return db_e
+
+
+def delete_equipe(db: Session, eq_id: int):
+    db_e = get_equipe(db, eq_id)
+    if not db_e:
+        return False
+    db.delete(db_e); db.commit()
+    return True
+
 # Inscrições
 def get_inscricoes(db: Session, skip=0, limit=100):
     return db.query(models.Inscricao).offset(skip).limit(limit).all()
@@ -63,6 +114,23 @@ def create_inscricao(db: Session, i: schemas.InscricaoCreate):
     db_i = models.Inscricao(**i.dict())
     db.add(db_i); db.commit(); db.refresh(db_i)
     return db_i
+
+def update_inscricao(db: Session, insc_id: int, i_in: schemas.InscricaoCreate):
+    db_i = get_inscricao(db, insc_id)
+    if not db_i:
+        return None
+    for field, value in i_in.dict(exclude_unset=True).items():
+        setattr(db_i, field, value)
+    db.commit(); db.refresh(db_i)
+    return db_i
+
+
+def delete_inscricao(db: Session, insc_id: int):
+    db_i = get_inscricao(db, insc_id)
+    if not db_i:
+        return False
+    db.delete(db_i); db.commit()
+    return True
 
 # Problemas
 def get_problemas(db: Session, skip=0, limit=100):
@@ -76,6 +144,23 @@ def create_problema(db: Session, p: schemas.ProblemaCreate):
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p
 
+def update_problema(db: Session, prob_id: int, p_in: schemas.ProblemaCreate):
+    db_p = get_problema(db, prob_id)
+    if not db_p:
+        return None
+    for field, value in p_in.dict(exclude_unset=True).items():
+        setattr(db_p, field, value)
+    db.commit(); db.refresh(db_p)
+    return db_p
+
+
+def delete_problema(db: Session, prob_id: int):
+    db_p = get_problema(db, prob_id)
+    if not db_p:
+        return False
+    db.delete(db_p); db.commit()
+    return True
+
 # Submissões
 def get_submissoes(db: Session, skip=0, limit=100):
     return db.query(models.Submissao).offset(skip).limit(limit).all()
@@ -87,6 +172,23 @@ def create_submissao(db: Session, s: schemas.SubmissaoCreate):
     db_s = models.Submissao(**s.dict())
     db.add(db_s); db.commit(); db.refresh(db_s)
     return db_s
+
+def update_submissao(db: Session, sub_id: int, s_in: schemas.SubmissaoCreate):
+    db_s = get_submissao(db, sub_id)
+    if not db_s:
+        return None
+    for field, value in s_in.dict(exclude_unset=True).items():
+        setattr(db_s, field, value)
+    db.commit(); db.refresh(db_s)
+    return db_s
+
+
+def delete_submissao(db: Session, sub_id: int):
+    db_s = get_submissao(db, sub_id)
+    if not db_s:
+        return False
+    db.delete(db_s); db.commit()
+    return True
 
 # Estatísticas (list + opcional call da procedure)
 def get_estatisticas(db: Session, skip: int = 0, limit: int = 100):
@@ -111,6 +213,23 @@ def create_colaborador(db: Session, c: schemas.ColaboradorCreate):
     db.add(db_c); db.commit(); db.refresh(db_c)
     return db_c
 
+def update_colaborador(db: Session, user_id: int, c_in: schemas.ColaboradorCreate):
+    db_c = get_colaborador(db, user_id)
+    if not db_c:
+        return None
+    for field, value in c_in.dict(exclude_unset=True).items():
+        setattr(db_c, field, value)
+    db.commit(); db.refresh(db_c)
+    return db_c
+
+
+def delete_colaborador(db: Session, user_id: int):
+    db_c = get_colaborador(db, user_id)
+    if not db_c:
+        return False
+    db.delete(db_c); db.commit()
+    return True
+
 # Participantes
 def get_participantes(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Participante).offset(skip).limit(limit).all()
@@ -127,6 +246,23 @@ def create_participante(db: Session, p: schemas.ParticipanteCreate):
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p
 
+def update_participante(db: Session, user_id: int, p_in: schemas.ParticipanteCreate):
+    db_p = get_participante(db, user_id)
+    if not db_p:
+        return None
+    for field, value in p_in.dict(exclude_unset=True).items():
+        setattr(db_p, field, value)
+    db.commit(); db.refresh(db_p)
+    return db_p
+
+
+def delete_participante(db: Session, user_id: int):
+    db_p = get_participante(db, user_id)
+    if not db_p:
+        return False
+    db.delete(db_p); db.commit()
+    return True
+
 # Patrocinadores
 def get_patrocinadores(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Patrocinador).offset(skip).limit(limit).all()
@@ -142,3 +278,20 @@ def create_patrocinador(db: Session, p: schemas.PatrocinadorCreate):
     )
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p
+
+def update_patrocinador(db: Session, user_id: int, p_in: schemas.PatrocinadorCreate):
+    db_p = get_patrocinador(db, user_id)
+    if not db_p:
+        return None
+    for field, value in p_in.dict(exclude_unset=True).items():
+        setattr(db_p, field, value)
+    db.commit(); db.refresh(db_p)
+    return db_p
+
+
+def delete_patrocinador(db: Session, user_id: int):
+    db_p = get_patrocinador(db, user_id)
+    if not db_p:
+        return False
+    db.delete(db_p); db.commit()
+    return True
