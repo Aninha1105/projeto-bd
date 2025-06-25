@@ -124,8 +124,7 @@ class ColaboradorRead(ColaboradorBase):
 class ParticipanteBase(BaseModel):
     id_usuario: int
     universidade: Optional[str] = None
-    # omitimos foto (binary) no schema de leitura para simplificar
-
+    foto_base64: Optional[str] = None
 class ParticipanteCreate(ParticipanteBase):
     pass
 
@@ -136,7 +135,7 @@ class ParticipanteRead(ParticipanteBase):
 # Patrocinador (herda de Usuario)
 class PatrocinadorBase(BaseModel):
     id_usuario: int
-    contribuicao: float
+    logo_base64: Optional[str] = None
 
 class PatrocinadorCreate(PatrocinadorBase):
     pass
@@ -145,6 +144,19 @@ class PatrocinadorRead(PatrocinadorBase):
     class Config:
         from_attributes = True
 
+class CompeticaoPatrocinadorBase(BaseModel):
+    id_competicao: int
+    id_usuario_patro: int
+    contribuicao: float
+
+class CompeticaoPatrocinadorCreate(CompeticaoPatrocinadorBase):
+    pass
+
+class CompeticaoPatrocinadorRead(CompeticaoPatrocinadorBase):
+    id_link: int
+    class Config:
+        from_attributes = True
+        
 class Token(BaseModel):
     access_token: str
     token_type: str

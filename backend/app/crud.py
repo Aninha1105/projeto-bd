@@ -275,8 +275,7 @@ def get_patrocinador(db: Session, user_id: int):
 def create_patrocinador(db: Session, p: schemas.PatrocinadorCreate):
     db_p = models.Patrocinador(
         id_usuario=p.id_usuario,
-        contribuicao=p.contribuicao,
-        logotipo=None
+        logotipo=p.logo_base64
     )
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p
@@ -290,9 +289,39 @@ def update_patrocinador(db: Session, user_id: int, p_in: schemas.PatrocinadorCre
     db.commit(); db.refresh(db_p)
     return db_p
 
-
 def delete_patrocinador(db: Session, user_id: int):
     db_p = get_patrocinador(db, user_id)
+    if not db_p:
+        return False
+    db.delete(db_p); db.commit()
+    return True
+
+def get_competicao_patrocinador(db: Session, user_id: int, comp_id: int):
+    return db.query(models.CompeticaoPatrocinador).filter(models.CompeticaoPatrocinador.id_usuario_patro == user_id 
+                                                          and models.CompeticaoPatrocinador.id_competicao == comp_id).first()
+
+def create_competicao_patrocinador(db: Session, comp_id: int, user_id: int, contribuicao: float):
+    link = models.CompeticaoPatrocinador(
+        id_competicao=comp_id,
+        id_usuario_patro=user_id,
+        contribuicao=contribuicao
+    )
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+    return link
+
+def update_competicao_patrocinador(db: Session, user_id: int, comp_id: int, cp_in: schemas.CompeticaoPatrocinadorCreate):
+    db_p = get_competicao_patrocinador(db, user_id, comp_id)
+    if not db_p:
+        return None
+    for field, value in cp_in.dict(exclude_unset=True).items():
+        setattr(db_p, field, value)
+    db.commit(); db.refresh(db_p)
+    return db_p
+
+def delete_patrocinador(db: Session, user_id: int, comp_id: int):
+    db_p = get_competicao_patrocinador(db, user_id,comp_id)
     if not db_p:
         return False
     db.delete(db_p); db.commit()

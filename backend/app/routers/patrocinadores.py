@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadFile, File
 from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
@@ -33,3 +33,30 @@ def remover_patrocinador(user_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(404, "Patrocinador não encontrado")
     return Response(status_code=204)
+
+@router.put("/{user_id}/logotipo", status_code=status.HTTP_204_NO_CONTENT)
+async def upload_logo(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    p = crud.get_patrocinador(db, user_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Patrocinador não encontrado")
+    contents = await file.read()
+    p.logo = contents
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@router.post(
+    "/{user_id}/competicoes/{comp_id}/patrocinar",
+    response_model=schemas.CompeticaoPatrocinadorRead,  # você pode criar esse schema
+    status_code=201
+)
+def patrocinar_competicao(
+    user_id: int,
+    comp_id: int,
+    body: schemas.CompeticaoPatrocinadorCreate,  # contém o campo contribuicao
+    db: Session = Depends(get_db)
+):
+    return crud.create_competicao_patrocinador(db, comp_id, user_id, body.contribuicao)

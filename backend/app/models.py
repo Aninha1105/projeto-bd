@@ -75,7 +75,7 @@ class Participante(Base):
     __tablename__ = "participante"
     id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), primary_key=True)
     universidade = Column(String(100))
-    foto = Column(LargeBinary)
+    foto = Column(LargeBinary, nullable=True)
 
     usuario = relationship("Usuario", back_populates="participante")
     inscricoes = relationship("Inscricao", back_populates="participante")
@@ -86,8 +86,7 @@ class Participante(Base):
 class Patrocinador(Base):
     __tablename__ = "patrocinador"
     id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), primary_key=True)
-    contribuicao = Column(DECIMAL(10,2))
-    logotipo = Column(LargeBinary)
+    logotipo = Column(LargeBinary, nullable=True)
 
     usuario = relationship("Usuario", back_populates="patrocinador")
     competicoes = relationship("CompeticaoPatrocinador", back_populates="patrocinador")
@@ -115,6 +114,8 @@ class CompeticaoPatrocinador(Base):
     id_link = Column(Integer, primary_key=True, index=True)
     id_competicao = Column(Integer, ForeignKey("competicao.id_competicao"), nullable=False)
     id_usuario_patro = Column(Integer, ForeignKey("patrocinador.id_usuario"), nullable=False)
+    contribuicao = Column(DECIMAL(10,2))
+
 
     __table_args__ = (
         UniqueConstraint("id_competicao", "id_usuario_patro", name="uix_comp_patro"),
