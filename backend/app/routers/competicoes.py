@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
+from sqlalchemy import text
+
 
 router = APIRouter(prefix="/competicoes", tags=["Competicoes"])
 
@@ -32,4 +34,21 @@ def remover_competicao(comp_id: int, db: Session = Depends(get_db)):
     success = crud.delete_competicao(db, comp_id)
     if not success:
         raise HTTPException(404, "Competição não encontrada")
+    return Response(status_code=204)
+
+@router.post(
+    "/{comp_id}/gerar-estatistica",
+    status_code=204,
+    summary="Gera ou atualiza estatísticas de uma competição",
+    responses={204: {"description": "Estatística recalculada com sucesso"}}
+)
+def gerar_estatistica(
+    comp_id: int,
+    db: Session = Depends(get_db)
+):
+    # Chama a procedure no banco
+    db.execute(text("CALL public.sp_gerar_estatistica(:id)"), {"id": comp_id})
+    db.commit()
+
+    # Retorna apenas o status 204
     return Response(status_code=204)
