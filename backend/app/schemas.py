@@ -26,7 +26,13 @@ class UsuarioBase(BaseModel):
     tipo: str
 
 class UsuarioCreate(UsuarioBase):
-    senha_hash: str
+    senha: str
+
+class UsuarioUpdate(BaseModel):
+    nome: Optional[str] = None
+    email: Optional[str] = None
+    tipo: Optional[str] = None
+    senha: Optional[str] = None  # ✅ senha opcional
 
 class UsuarioRead(UsuarioBase):
     id_usuario: int
@@ -157,6 +163,16 @@ class CompeticaoPatrocinadorRead(CompeticaoPatrocinadorBase):
     class Config:
         from_attributes = True
         
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+# Schema de entrada de login
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+# Schema de resposta de usuário (sem senha)
+class UserResponse(BaseModel):
+    id_usuario: int
+    email: str
+    tipo: str
+
+    class Config:
+        orm_mode = True

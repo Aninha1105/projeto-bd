@@ -70,9 +70,9 @@ endif
 ## Roda o servidor de desenvolvimento com Uvicorn
 run: install
 ifeq ($(DETECTED_OS),Windows)
-	@cmd /c "$(UVICORN) app.main:app --reload"
+	@cmd /c "$(UVICORN) app.main:app --reload --port 8000"
 else
-	@$(UVICORN) app.main:app --reload
+	@$(UVICORN) app.main:app --reload --port 8000
 endif
 
 ## Limpa o ambiente (remove venv e caches)

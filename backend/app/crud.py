@@ -60,13 +60,20 @@ def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
     db.refresh(db_user)
     return db_user
 
-def update_usuario(db: Session, user_id: int, u_in: schemas.UsuarioCreate):
-    db_user = get_usuario(db, user_id)
+def update_usuario(db: Session, user_id: int, u_in: schemas.UsuarioUpdate):
+    db_user = db.query(models.Usuario).get(user_id)
     if not db_user:
         return None
-    for field, value in u_in.dict(exclude_unset=True).items():
+    
+    data = u_in.dict(exclude_unset=True)
+    # Se alterar senha, gerar hash
+    if 'senha' in data:
+        data['senha_hash'] = hash_password(data.pop('senha'))
+
+    for field, value in data.items():
         setattr(db_user, field, value)
-    db.commit(); db.refresh(db_user)
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 

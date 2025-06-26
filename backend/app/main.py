@@ -4,7 +4,7 @@ from .database import engine, Base
 from . import models
 from .routers import (competicoes, usuarios, equipes, inscricoes, problemas,
                       submissoes, estatisticas, colaboradores, participantes,
-                      patrocinadores)
+                      patrocinadores, auth)
 
 Base.metadata.create_all(bind=engine)
 
@@ -28,6 +28,7 @@ app.include_router(estatisticas.router)
 app.include_router(colaboradores.router)
 app.include_router(participantes.router)
 app.include_router(patrocinadores.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def read_root():

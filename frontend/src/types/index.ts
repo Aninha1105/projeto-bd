@@ -61,3 +61,19 @@ export interface DashboardStats {
   registeredTeams: number;
   monthlyRegistrations: { month: string; count: number }[];
 }
+export interface AuthUser {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  university: string;
+  photo?: string;
+  role: 'admin' | 'organizer' | 'participant';
+}
+
+export interface AuthContextType {
+  user: AuthUser | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  isLoading: boolean;
+}

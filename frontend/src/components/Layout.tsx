@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Trophy, BarChart3, User, Code } from 'lucide-react';
+import { Menu, X, Home, Trophy, BarChart3, User, Code, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
   currentScreen: string;
   onScreenChange: (screen: string) => void;
+  onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange, onLogout }) => {
+  const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
@@ -17,9 +20,27 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
     { id: 'profile', name: 'Perfil', icon: User },
   ];
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  const handleLogout = () => {
+    onLogout();
+    setIsMobileMenuOpen(false);
   };
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return { text: 'Admin', color: 'bg-red-100 text-red-800' };
+      case 'organizer':
+        return { text: 'Organizadora', color: 'bg-blue-100 text-blue-800' };
+      case 'participant':
+        return { text: 'Participante', color: 'bg-green-100 text-green-800' };
+      default:
+        return { text: role, color: 'bg-gray-100 text-gray-800' };
+    }
+  };
+
+  const roleBadge = user ? getRoleBadge(user.role) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
@@ -58,6 +79,29 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
               })}
             </nav>
 
+            {/* User Info & Logout */}
+            <div className="hidden md:flex items-center space-x-4">
+              {user && (
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                    {roleBadge && (
+                      <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${roleBadge.color}`}>
+                        {roleBadge.text}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Sair"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Mobile menu button */}
             <button
               onClick={toggleMobileMenu}
@@ -72,6 +116,21 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-purple-100">
             <div className="px-4 py-2 space-y-1">
+              {/* User Info Mobile */}
+              {user && (
+                <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                    {roleBadge && (
+                      <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${roleBadge.color}`}>
+                        {roleBadge.text}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Items */}
               {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -92,6 +151,15 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
                   </button>
                 );
               })}
+
+              {/* Logout Button Mobile */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Sair</span>
+              </button>
             </div>
           </div>
         )}

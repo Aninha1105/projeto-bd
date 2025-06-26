@@ -6,6 +6,7 @@ import { mockUniversities } from '../data/mockData';
 interface RegistrationFormProps {
   competition: Competition;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSubmit: (data: any) => void;
 }
 

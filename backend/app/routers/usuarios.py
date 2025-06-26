@@ -23,7 +23,7 @@ def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db))
     return crud.create_usuario(db, usuario)
 
 @router.put("/{user_id}", response_model=schemas.UsuarioRead)
-def alterar_usuario(user_id: int, u: schemas.UsuarioCreate, db: Session = Depends(get_db)):
+def alterar_usuario(user_id: int, u: schemas.UsuarioUpdate, db: Session = Depends(get_db)):
     updated = crud.update_usuario(db, user_id, u)
     if not updated:
         raise HTTPException(404, "Usuário não encontrado")
