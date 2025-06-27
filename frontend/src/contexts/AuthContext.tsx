@@ -1,5 +1,13 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { login as loginService, User as AuthUser } from '../api/auth';
+import { login as loginService, User as ApiUser } from '../api/auth';
+
+// Ajusta o shape do usuário para nossa aplicação
+export interface AuthUser {
+  id: ApiUser['id_usuario'];
+  email: ApiUser['email'];
+  role: ApiUser['tipo'];
+}
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -19,14 +27,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Ao montar, carrega usuário do localStorage, se existir
+  // Ao montar, carrega usuário do localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('user');
+    const stored = localStorage.getItem('auth_user');
     if (stored) {
       try {
         setUser(JSON.parse(stored));
       } catch {
-        localStorage.removeItem('user');
+        localStorage.removeItem('auth_user');
       }
     }
   }, []);
@@ -34,9 +42,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const userData = await loginService(email, password);
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      const apiUser = await loginService(email, password);
+      // Mapeia propriedades retornadas pelo backend para o nosso AuthUser
+      const authUser: AuthUser = {
+        id: apiUser.id_usuario,
+        email: apiUser.email,
+        role: apiUser.tipo,
+      };
+      setUser(authUser);
+      localStorage.setItem('auth_user', JSON.stringify(authUser));
       return true;
     } catch (err) {
       console.error('Login error', err);
@@ -48,7 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    localStorage.removeItem('auth_user');
   };
 
   return (

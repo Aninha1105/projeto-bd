@@ -1,7 +1,7 @@
 # backend/app/schemas.py
 from pydantic import BaseModel
-from datetime import date, datetime
-from typing import Optional, List
+from datetime import date, datetime, time
+from typing import Optional
 
 # Schemas para Competição (existente)
 class CompeticaoBase(BaseModel):
@@ -10,12 +10,20 @@ class CompeticaoBase(BaseModel):
     data: date
     id_equipe: int
 
+    # novos campos
+    horario: Optional[time] = None
+    max_participantes: Optional[int] = None
+    descricao: Optional[str] = None
+
 class CompeticaoCreate(CompeticaoBase):
     pass
 
 class CompeticaoRead(CompeticaoBase):
     id_competicao: int
 
+    # atributos virtuais
+    status: Optional[str]
+    num_inscritos: Optional[int]
     class Config:
         from_attributes = True
 

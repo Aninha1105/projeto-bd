@@ -2,10 +2,13 @@
 
 from sqlalchemy import (
     Column, Integer, String, Date, DECIMAL,
-    ForeignKey, Enum, LargeBinary, DateTime, UniqueConstraint
+    ForeignKey, Enum, LargeBinary, DateTime, UniqueConstraint,
+    Time, Text
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property
+from datetime import datetime
 import enum
 
 from .database import Base
@@ -13,7 +16,6 @@ from .database import Base
 # Enums
 class UsuarioTipo(enum.Enum):
     admin = "admin"
-    visitante = "visitante"
     colaborador = "colaborador"
     participante = "participante"
     patrocinador = "patrocinador"
@@ -101,12 +103,31 @@ class Competicao(Base):
     data = Column(Date, nullable=False)
     id_equipe = Column(Integer, ForeignKey("equipe_colaboradores.id_equipe"), nullable=False)
 
+    # novos atributos
+    horario = Column(Time, nullable=True)
+    max_participantes = Column(Integer, nullable=True)
+    descricao = Column(Text, nullable=True)
+
     equipe = relationship("EquipeColaboradores", back_populates="competicoes")
     patrocinadores = relationship("CompeticaoPatrocinador", back_populates="competicao")
     inscricoes = relationship("Inscricao", back_populates="competicao")
     problemas = relationship("Problema", back_populates="competicao")
     estatistica = relationship("Estatistica", uselist=False, back_populates="competicao")
 
+    @hybrid_property
+    def num_inscritos(self):
+        # contador simples em Python
+        return len(self.inscricoes)
+    
+    @hybrid_property
+    def status(self):
+        hoje = datetime.today().date()
+        if self.data > hoje:
+            return "Próxima"
+        elif self.data == hoje:
+            return "Hoje"
+        else:
+            return "Finalizada"
 
 # 7. CompeticaoPatrocinador
 class CompeticaoPatrocinador(Base):

@@ -158,15 +158,19 @@ const Login: React.FC = () => {
             <div className="space-y-2 text-xs text-gray-600">
               <div className="flex justify-between">
                 <span className="font-medium">Admin:</span>
-                <span>admin@maratonas.com / admin123</span>
+                <span>admin@ex.com / hashAdmin</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium">Organizadora:</span>
-                <span>organizadora@maratonas.com / org123</span>
+                <span className="font-medium">Colaboradora:</span>
+                <span>ana@ex.com / hashA</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Participante:</span>
-                <span>participante@maratonas.com / part123</span>
+                <span>fernanda@ex.com / hashF</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Patrocinador:</span>
+                <span>contato@meninascomp.com / hash_meninascomp</span>
               </div>
             </div>
           </div>

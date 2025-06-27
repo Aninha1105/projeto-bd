@@ -1,29 +1,58 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Trophy, BarChart3, User, Code, LogOut } from 'lucide-react';
+import { Menu, X, Home, Trophy, /*UserPlus,*/ BarChart3, User, Code, LogOut/*, Plus*/ } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
   currentScreen: string;
   onScreenChange: (screen: string) => void;
-  onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange, onLogout }) => {
-  const { user } = useAuth();
+const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange }) => {
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
-    { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'competitions', name: 'Competições', icon: Trophy },
-    { id: 'statistics', name: 'Estatísticas', icon: BarChart3 },
-    { id: 'profile', name: 'Perfil', icon: User },
-  ];
+  const getNavigationItems = () => {
+    const baseItems = [
+      { id: 'dashboard', name: 'Dashboard', icon: Home, roles: ['admin', 'colaborador', 'participante', 'patrocinador'] },
+      { id: 'competitions', name: 'Competições', icon: Trophy, roles: ['admin', 'colaborador', 'participante', 'patrocinador'] },
+    ];
+
+    const roleSpecificItems = [];
+
+    if (user?.role === 'admin') {
+      roleSpecificItems.push(
+        //{ id: 'registrations', name: 'Inscrições', icon: UserPlus, roles: ['admin'] },
+        { id: 'statistics', name: 'Estatísticas', icon: BarChart3, roles: ['admin'] }
+        //{ id: 'create-competition', name: 'Criar Evento', icon: Plus, roles: ['admin'] }
+      );
+    } else if (user?.role === 'colaborador') {
+      roleSpecificItems.push(
+        { id: 'statistics', name: 'Estatísticas', icon: BarChart3, roles: ['colaborador'] }
+        //{ id: 'create-competition', name: 'Criar Evento', icon: Plus, roles: ['colaborador'] },
+        //{ id: 'registrations', name: 'Minhas Inscrições', icon: UserPlus, roles: ['colaborador'] }
+      );
+    } else if (user?.role === 'participante') {
+      roleSpecificItems.push(
+        //{ id: 'registrations', name: 'Minhas Inscrições', icon: UserPlus, roles: ['participante'] }
+      );
+    } else if (user?.role === 'patrocinador') {
+      // Patrocinadores têm acesso apenas ao dashboard e competições
+    }
+
+    const profileItem = { id: 'profile', name: 'Perfil', icon: User, roles: ['admin', 'colaborador', 'participante', 'patrocinador'] };
+
+    return [...baseItems, ...roleSpecificItems, profileItem].filter(item =>
+      item.roles.includes(user?.role || '')
+    );
+  };
+
+  const navigation = getNavigationItems();
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   const handleLogout = () => {
-    onLogout();
+    logout();
     setIsMobileMenuOpen(false);
   };
 
@@ -31,10 +60,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
     switch (role) {
       case 'admin':
         return { text: 'Admin', color: 'bg-red-100 text-red-800' };
-      case 'organizer':
-        return { text: 'Organizadora', color: 'bg-blue-100 text-blue-800' };
-      case 'participant':
+      case 'colaborador':
+        return { text: 'Colaborador', color: 'bg-blue-100 text-blue-800' };
+      case 'participante':
         return { text: 'Participante', color: 'bg-green-100 text-green-800' };
+      case 'patrocinador':
+        return { text: 'Patrocinador', color: 'bg-purple-100 text-purple-800' };
       default:
         return { text: role, color: 'bg-gray-100 text-gray-800' };
     }
@@ -91,6 +122,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
                       </span>
                     )}
                   </div>
+                  {/*
+                    // Futuro: exibir foto do usuário
+                    // <img
+                    //   src={user.photo}
+                    //   alt={user.email}
+                    //   className="w-8 h-8 rounded-full object-cover"
+                    // />
+                  */}
                   <button
                     onClick={handleLogout}
                     className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -119,6 +158,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
               {/* User Info Mobile */}
               {user && (
                 <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg mb-4">
+                  {/*
+                    // Futuro: exibir foto do usuário
+                    // <img
+                    //   src={user.photo}
+                    //   alt={user.email}
+                    //   className="w-10 h-10 rounded-full object-cover"
+                    // />
+                  */}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{user.email}</p>
                     {roleBadge && (
@@ -136,10 +183,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
                 return (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      onScreenChange(item.id);
-                      setIsMobileMenuOpen(false);
-                    }}
+                    onClick={() => { onScreenChange(item.id); setIsMobileMenuOpen(false); }}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                       currentScreen === item.id
                         ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'

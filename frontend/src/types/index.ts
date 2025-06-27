@@ -8,6 +8,9 @@ export interface Competition {
   maxParticipants: number;
   description?: string;
   status: 'upcoming' | 'ongoing' | 'completed';
+  createdBy?: string;
+  collaborators?: string[];
+  sponsorships?: Sponsorship[];
 }
 
 export interface Participant {
@@ -52,7 +55,15 @@ export interface User {
   email: string;
   university: string;
   photo?: string;
-  role: 'admin' | 'organizer' | 'participant';
+  role: 'admin' | 'organizer' | 'participant' | 'sponsor';
+}
+
+export interface Sponsorship {
+  id: string;
+  sponsorId: string;
+  sponsorName: string;
+  amount: number;
+  contributedAt: string;
 }
 
 export interface DashboardStats {
@@ -61,6 +72,7 @@ export interface DashboardStats {
   registeredTeams: number;
   monthlyRegistrations: { month: string; count: number }[];
 }
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -68,7 +80,7 @@ export interface AuthUser {
   name: string;
   university: string;
   photo?: string;
-  role: 'admin' | 'organizer' | 'participant';
+  role: 'admin' | 'organizer' | 'participant' | 'sponsor';
 }
 
 export interface AuthContextType {
@@ -77,3 +89,13 @@ export interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
 }
+
+export interface CompetitionFormData {
+  name: string;
+  date: string;
+  location: string;
+  time: string;
+  maxParticipants: number;
+  description: string;
+  collaborators: string[];
+}</parameter>
