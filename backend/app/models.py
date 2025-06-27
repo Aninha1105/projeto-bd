@@ -46,10 +46,13 @@ class Usuario(Base):
     senha_hash = Column(String(255), nullable=False)
     tipo = Column(Enum(UsuarioTipo), nullable=False)
 
+    # Novo atributo
+    foto = Column(LargeBinary, nullable=True)
+
     colaborador = relationship("Colaborador", uselist=False, back_populates="usuario")
     participante = relationship("Participante", uselist=False, back_populates="usuario")
     patrocinador = relationship("Patrocinador", uselist=False, back_populates="usuario")
-
+  
 
 # 2. Equipe de Colaboradores
 class EquipeColaboradores(Base):
@@ -67,32 +70,47 @@ class Colaborador(Base):
     id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), primary_key=True)
     papel = Column(Enum(ColaboradorPapel), nullable=False)
     id_equipe = Column(Integer, ForeignKey("equipe_colaboradores.id_equipe"), nullable=False)
+    instituicao = Column(String(100), nullable=True)
 
     usuario = relationship("Usuario", back_populates="colaborador")
     equipe = relationship("EquipeColaboradores", back_populates="colaboradores")
 
+    @hybrid_property
+    def num_competicoes(self):
+        # Competicoes via equipe
+        return len(self.equipe.competicoes)
 
 # 4. Participante
 class Participante(Base):
     __tablename__ = "participante"
     id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), primary_key=True)
-    universidade = Column(String(100))
-    foto = Column(LargeBinary, nullable=True)
+    instituicao = Column(String(100))
 
     usuario = relationship("Usuario", back_populates="participante")
     inscricoes = relationship("Inscricao", back_populates="participante")
     submissoes = relationship("Submissao", back_populates="participante")
 
+    @hybrid_property
+    def num_competicoes(self):
+        # Competicoes via inscricoes
+        return len(self.inscricoes)
+    
+    @hybrid_property
+    def num_submissoes(self):
+        return len(self.submissoes)
 
 # 5. Patrocinador
 class Patrocinador(Base):
     __tablename__ = "patrocinador"
     id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), primary_key=True)
-    logotipo = Column(LargeBinary, nullable=True)
 
     usuario = relationship("Usuario", back_populates="patrocinador")
     competicoes = relationship("CompeticaoPatrocinador", back_populates="patrocinador")
 
+    @hybrid_property
+    def num_competicoes(self):
+        # Competicoes via competicao_patrocinador
+        return len(self.competicoes)
 
 # 6. Competição
 class Competicao(Base):

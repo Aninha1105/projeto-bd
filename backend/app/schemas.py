@@ -126,35 +126,42 @@ class ColaboradorBase(BaseModel):
     id_usuario: int
     papel: str
     id_equipe: int
+    instituicao: Optional[str] = None
 
 class ColaboradorCreate(ColaboradorBase):
     pass
 
 class ColaboradorRead(ColaboradorBase):
+    # atributo virtual
+    num_competicoes: int
     class Config:
         from_attributes = True
 
 # Participante (herda de Usuario)
 class ParticipanteBase(BaseModel):
     id_usuario: int
-    universidade: Optional[str] = None
-    foto_base64: Optional[str] = None
+    instituicao: Optional[str] = None
+
 class ParticipanteCreate(ParticipanteBase):
     pass
 
 class ParticipanteRead(ParticipanteBase):
+    # atributos virtuais
+    num_submissoes: int
+    num_competicoes: int
     class Config:
         from_attributes = True
 
 # Patrocinador (herda de Usuario)
 class PatrocinadorBase(BaseModel):
     id_usuario: int
-    logo_base64: Optional[str] = None
 
 class PatrocinadorCreate(PatrocinadorBase):
     pass
 
 class PatrocinadorRead(PatrocinadorBase):
+    # atributo virtual
+    num_competicoes: int
     class Config:
         from_attributes = True
 
@@ -183,4 +190,4 @@ class UserResponse(BaseModel):
     tipo: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
