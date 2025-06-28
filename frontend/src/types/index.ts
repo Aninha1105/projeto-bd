@@ -19,7 +19,6 @@ export interface Participant {
   id: string;
   name: string;
   email: string;
-  birthDate: string;
   university: string;
   photo?: string;
 }
@@ -28,20 +27,6 @@ export interface Team {
   id: string;
   name: string;
   memberCount: number;
-}
-
-export interface Submission {
-  id: string;
-  participantId: string;
-  participantName: string;
-  competitionId: string;
-  problemsSolved: number;
-  totalProblems: number;
-  timeSpent: string;
-  ranking: number;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: string;
-  university: string;
 }
 
 export interface AuthUser {

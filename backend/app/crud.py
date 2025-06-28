@@ -306,6 +306,7 @@ def delete_patrocinador(db: Session, user_id: int):
     db.delete(db_p); db.commit()
     return True
 
+# Competicao Patrocinador
 def get_competicao_patrocinador(db: Session, user_id: int, comp_id: int):
     return db.query(models.CompeticaoPatrocinador).filter(models.CompeticaoPatrocinador.id_usuario_patro == user_id 
                                                           and models.CompeticaoPatrocinador.id_competicao == comp_id).first()
