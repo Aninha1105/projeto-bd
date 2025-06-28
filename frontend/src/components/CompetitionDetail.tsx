@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Users, Plus, Code, Award } from 'lucide-react';
-import { Competition, Participant } from '../types';
-import { mockParticipants } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, MapPin, Clock, Users, Plus, Code, Award, DollarSign, Heart } from 'lucide-react';
+import { Competition, Participant, Sponsorship } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import RegistrationForm from './RegistrationForm';
+import SponsorshipForm from './SponsorshipForm';
+import { api } from '../api/api';
 
 interface CompetitionDetailProps {
   competition: Competition;
@@ -10,54 +12,96 @@ interface CompetitionDetailProps {
 }
 
 const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBack }) => {
+  const { user } = useAuth();
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [sponsorships, setSponsorships] = useState<Sponsorship[]>([]);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-  
-  // TODO: fetch participants for this competition from API
-  const participants = mockParticipants;
+  const [showSponsorshipForm, setShowSponsorshipForm] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+  useEffect(() => {
+    if (!competition) return;
+
+    const fetchRelatedData = async () => {
+      try {
+        const [inscRes, patrocRes] = await Promise.all([
+          api.get(`/inscricoes/competicao/${competition.id}`),
+          api.get(`/competicaopatrocinador/competicao/${competition.id}`)
+        ]);
+
+        // Mapear os dados recebidos para o formato usado nos components
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setParticipants(inscRes.data.map((inscricao: any) => ({
+          id: inscricao.participante.id,
+          name: inscricao.participante.usuario.nome,
+          email: inscricao.participante.usuario.email,
+          photo: inscricao.participante.usuario.foto,
+          university: inscricao.participante.universidade,
+        })));
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setSponsorships(patrocRes.data.map((patrocinio: any) => ({
+          id: patrocinio.id,
+          sponsorName: patrocinio.patrocinador.usuario.nome,
+          sponsorEmail: patrocinio.patrocinador.usuario.email,
+          sponsorPhoto: patrocinio.patrocinador.usuario.foto,
+          amount: patrocinio.contribuicao,
+        })));
+
+
+      } catch (error) {
+        console.error("Erro ao carregar dados relacionados:", error);
+      }
+    };
+
+    fetchRelatedData();
+  }, [competition]);
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('pt-BR', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
-  };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const canAddRegistration = () =>
+    user?.role === 'admin' ||
+    (user?.role === 'colaborador' && competition.collaborators?.includes(user.id));
+
+  const canSponsor = () => user?.role === 'patrocinador';
+  const canRegisterAsParticipant = () => user?.role === 'participante';
+
+  const totalSponsorship = sponsorships.reduce((sum, s) => sum + s.amount, 0);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleRegistrationSubmit = async (data: any) => {
+    try {
+      await api.post(`/competicoes/${competition.id}/inscricoes`, data);
+      setShowRegistrationForm(false);
+      const res = await api.get(`/inscricoes/competicao/${competition.id}`);
+      setParticipants(res.data);
+    } catch (err) {
+      console.error('Erro ao registrar participante', err);
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'Confirmado';
-      case 'pending':
-        return 'Pendente';
-      case 'cancelled':
-        return 'Cancelado';
-      default:
-        return status;
+  const handleSponsorshipSubmit = async (amount: number) => {
+    try {
+      await api.post(`/competicaopatrocinador`, {
+        id_competicao: competition.id,
+        id_usuario_patro: user?.id,
+        contribuicao: amount
+      });
+      setShowSponsorshipForm(false);
+      const res = await api.get(`/competicaopatrocinador/competicao/${competition.id}`);
+      setSponsorships(res.data);
+    } catch (err) {
+      console.error('Erro ao patrocinar', err);
     }
   };
-
+  
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-purple-100 rounded-lg transition-colors"
-        >
+        <button onClick={onBack} className="p-2 hover:bg-purple-100 rounded-lg">
           <ArrowLeft className="h-6 w-6 text-purple-600" />
         </button>
         <div>
@@ -67,7 +111,7 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Competition Info */}
+        {/* Main column */}
         <div className="lg:col-span-2 space-y-6">
           {/* General Info */}
           <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
@@ -119,39 +163,82 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
             )}
           </div>
 
+          {/* Patrocínios */}
+          {sponsorships.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Patrocínios</h2>
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Total arrecadado</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {sponsorships.reduce((sum, s) => sum + s.amount, 0)
+                      .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {sponsorships.map(s => (
+                  <div key={s.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-green-100 rounded-full">
+                        <Heart className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <img
+                          src={s.sponsorPhoto || "https://via.placeholder.com/40"}
+                          alt={s.sponsorName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <p className="font-medium text-gray-900">{s.sponsorName}</p>
+                        <p className="text-sm text-gray-600">{s.sponsorEmail}</p>
+                      </div>
+                    </div>
+                    <span className="font-bold text-green-600">
+                      {s.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Participants */}
           <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Participantes</h2>
-              <button
-                onClick={() => setShowRegistrationForm(true)}
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Adicionar Inscrição</span>
-              </button>
+              <div className="flex space-x-2">
+                {canRegisterAsParticipant() && (
+                  <button
+                    onClick={() => setShowRegistrationForm(true)}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Me Inscrever</span>
+                  </button>
+                )}
+                {canAddRegistration() && (
+                  <button
+                    onClick={() => setShowRegistrationForm(true)}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Adicionar Inscrição</span>
+                  </button>
+                )}
+              </div>
             </div>
-
             <div className="space-y-4">
-              {participants.map((participant) => (
-                <div key={participant.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                  <img
-                    src={participant.photo || 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face'}
-                    alt={participant.name}
+              {participants.map(p => (
+                <div key={p.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                <img
+                    src={p.photo || 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face'}
+                    alt={p.name}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{participant.name}</h3>
-                    <p className="text-sm text-gray-600">{participant.email}</p>
-                    <p className="text-sm text-purple-600 font-medium">{participant.university}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(participant.registrationStatus)}`}>
-                      {getStatusText(participant.registrationStatus)}
-                    </span>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(participant.registrationDate).toLocaleDateString('pt-BR')}
-                    </p>
+                    <h3 className="font-medium text-gray-900">{p.name}</h3>
+                    <p className="text-sm text-gray-600">{p.email}</p>
+                    <p className="text-sm text-purple-600 font-medium">{p.university}</p>
                   </div>
                 </div>
               ))}
@@ -161,6 +248,23 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Sponsor Action */}
+          {canSponsor() && (
+            <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Patrocinar Evento</h3>
+              <p className="text-gray-600 text-sm mb-4">
+                Contribua para o sucesso desta competição e apoie o empoderamento feminino na tecnologia.
+              </p>
+              <button
+                onClick={() => setShowSponsorshipForm(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-medium flex items-center justify-center space-x-2"
+              >
+                <DollarSign className="h-5 w-5" />
+                <span>Contribuir</span>
+              </button>
+            </div>
+          )}
+
           {/* Stats */}
           <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Estatísticas</h3>
@@ -173,6 +277,14 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
                 <span className="text-gray-600">Vagas Disponíveis</span>
                 <span className="font-medium text-gray-900">{competition.maxParticipants - competition.registrations}</span>
               </div>
+              {totalSponsorship > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Patrocínio Total</span>
+                  <span className="font-medium text-green-600">
+                    {totalSponsorship.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Taxa de Ocupação</span>
                 <span className="font-medium text-gray-900">
@@ -214,33 +326,40 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Ações Rápidas</h3>
-            <div className="space-y-3">
-              <button className="w-full px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium">
-                Exportar Lista de Participantes
-              </button>
-              <button className="w-full px-4 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition-colors text-sm font-medium">
-                Enviar Comunicado
-              </button>
-              <button className="w-full px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium">
-                Gerar Relatório
-              </button>
+          {(canAddRegistration() || user?.role === 'admin') && (
+            <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Ações Rápidas</h3>
+              <div className="space-y-3">
+                <button className="w-full px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium">
+                  Exportar Lista de Participantes
+                </button>
+                <button className="w-full px-4 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition-colors text-sm font-medium">
+                  Enviar Comunicado
+                </button>
+                <button className="w-full px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium">
+                  Gerar Relatório
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
+      {/* Modais */}
       {/* Registration Form Modal */}
       {showRegistrationForm && (
         <RegistrationForm
           competition={competition}
           onClose={() => setShowRegistrationForm(false)}
-          onSubmit={(data) => {
-            // TODO: submit registration to API
-            console.log('Registration data:', data);
-            setShowRegistrationForm(false);
-          }}
+          onSubmit={handleRegistrationSubmit}
+        />
+      )}
+      {/* Sponsorship Form Modal */}
+      {showSponsorshipForm && (
+        <SponsorshipForm
+          competition={competition}
+          onClose={() => setShowSponsorshipForm(false)}
+          onSubmit={handleSponsorshipSubmit}
         />
       )}
     </div>

@@ -48,6 +48,56 @@ class UsuarioRead(UsuarioBase):
     class Config:
         from_attributes = True
 
+# Colaborador (herda de Usuario)
+class ColaboradorBase(BaseModel):
+    id_usuario: int
+    papel: str
+    id_equipe: int
+    instituicao: Optional[str] = None
+
+class ColaboradorCreate(ColaboradorBase):
+    pass
+
+class ColaboradorRead(ColaboradorBase):
+    # atributo virtual
+    num_competicoes: int
+    # atributos de herança
+    usuario: UsuarioRead
+    class Config:
+        from_attributes = True
+
+# Participante (herda de Usuario)
+class ParticipanteBase(BaseModel):
+    id_usuario: int
+    instituicao: Optional[str] = None
+
+class ParticipanteCreate(ParticipanteBase):
+    pass
+
+class ParticipanteRead(ParticipanteBase):
+    # atributos virtuais
+    num_submissoes: int
+    num_competicoes: int
+    # atributos de herança
+    usuario: UsuarioRead
+    class Config:
+        from_attributes = True
+
+# Patrocinador (herda de Usuario)
+class PatrocinadorBase(BaseModel):
+    id_usuario: int
+
+class PatrocinadorCreate(PatrocinadorBase):
+    pass
+
+class PatrocinadorRead(PatrocinadorBase):
+    # atributo virtual
+    num_competicoes: int
+    # atributos de herança
+    usuario: UsuarioRead
+    class Config:
+        from_attributes = True
+
 # Schemas para Equipe
 class EquipeBase(BaseModel):
     nome: str
@@ -72,7 +122,7 @@ class InscricaoCreate(InscricaoBase):
 
 class InscricaoRead(InscricaoBase):
     id_inscricao: int
-
+    participante: ParticipanteRead
     class Config:
         from_attributes = True
 
@@ -121,50 +171,6 @@ class EstatisticaRead(EstatisticaBase):
     class Config:
         from_attributes = True
 
-# Colaborador (herda de Usuario)
-class ColaboradorBase(BaseModel):
-    id_usuario: int
-    papel: str
-    id_equipe: int
-    instituicao: Optional[str] = None
-
-class ColaboradorCreate(ColaboradorBase):
-    pass
-
-class ColaboradorRead(ColaboradorBase):
-    # atributo virtual
-    num_competicoes: int
-    class Config:
-        from_attributes = True
-
-# Participante (herda de Usuario)
-class ParticipanteBase(BaseModel):
-    id_usuario: int
-    instituicao: Optional[str] = None
-
-class ParticipanteCreate(ParticipanteBase):
-    pass
-
-class ParticipanteRead(ParticipanteBase):
-    # atributos virtuais
-    num_submissoes: int
-    num_competicoes: int
-    class Config:
-        from_attributes = True
-
-# Patrocinador (herda de Usuario)
-class PatrocinadorBase(BaseModel):
-    id_usuario: int
-
-class PatrocinadorCreate(PatrocinadorBase):
-    pass
-
-class PatrocinadorRead(PatrocinadorBase):
-    # atributo virtual
-    num_competicoes: int
-    class Config:
-        from_attributes = True
-
 class CompeticaoPatrocinadorBase(BaseModel):
     id_competicao: int
     id_usuario_patro: int
@@ -175,6 +181,7 @@ class CompeticaoPatrocinadorCreate(CompeticaoPatrocinadorBase):
 
 class CompeticaoPatrocinadorRead(CompeticaoPatrocinadorBase):
     id_link: int
+    patrocinador: PatrocinadorRead
     class Config:
         from_attributes = True
         

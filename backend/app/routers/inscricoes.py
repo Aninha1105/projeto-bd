@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response
-from sqlalchemy.orm import Session
-from .. import crud, schemas
+from sqlalchemy.orm import Session, joinedload
+from typing import List
+from .. import crud, schemas, models
 from ..database import get_db
 
 router = APIRouter(prefix="/inscricoes", tags=["Inscrições"])
@@ -8,6 +9,14 @@ router = APIRouter(prefix="/inscricoes", tags=["Inscrições"])
 @router.get("/", response_model=list[schemas.InscricaoRead])
 def listar_inscricoes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_inscricoes(db, skip, limit)
+
+@router.get("/competicao/{comp_id}", response_model=List[schemas.InscricaoRead])
+def listar_inscricoes_por_competicao(comp_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Inscricao)\
+        .filter(models.Inscricao.id_competicao == comp_id)\
+        .join(models.Participante)\
+        .options(joinedload(models.Inscricao.participante))\
+        .all()
 
 @router.get("/{insc_id}", response_model=schemas.InscricaoRead)
 def obter_inscricao(insc_id: int, db: Session = Depends(get_db)):

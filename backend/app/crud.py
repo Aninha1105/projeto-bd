@@ -141,6 +141,9 @@ def delete_inscricao(db: Session, insc_id: int):
     db.delete(db_i); db.commit()
     return True
 
+def get_inscricoes_por_competicao(db: Session, comp_id: int):
+    return db.query(models.Inscricao).filter(models.Inscricao.id_competicao == comp_id).all()
+
 # Problemas
 def get_problemas(db: Session, skip=0, limit=100):
     return db.query(models.Problema).offset(skip).limit(limit).all()
@@ -327,9 +330,12 @@ def update_competicao_patrocinador(db: Session, user_id: int, comp_id: int, cp_i
     db.commit(); db.refresh(db_p)
     return db_p
 
-def delete_patrocinador(db: Session, user_id: int, comp_id: int):
+def delete_competicao_patrocinador(db: Session, user_id: int, comp_id: int):
     db_p = get_competicao_patrocinador(db, user_id,comp_id)
     if not db_p:
         return False
     db.delete(db_p); db.commit()
     return True
+
+def get_patrocinios_por_competicao(db: Session, comp_id: int):
+    return db.query(models.CompeticaoPatrocinador).filter(models.CompeticaoPatrocinador.id_competicao == comp_id).all()

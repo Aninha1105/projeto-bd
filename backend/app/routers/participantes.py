@@ -33,17 +33,3 @@ def remover_participante(user_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(404, "Participante não encontrada")
     return Response(status_code=204)
-
-@router.put("/{user_id}/foto", status_code=status.HTTP_204_NO_CONTENT)
-async def upload_logo(
-    user_id: int,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
-    p = crud.get_participante(db, user_id)
-    if not p:
-        raise HTTPException(status_code=404, detail="Participante não encontrado")
-    contents = await file.read()
-    p.logo = contents
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)

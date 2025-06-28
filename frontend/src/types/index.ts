@@ -66,6 +66,12 @@ export interface Sponsorship {
   contributedAt: string;
 }
 
+export interface Sponsorship {
+  id_competicao: number;
+  id_usuario_patro: number;
+  contribuicao: number;
+}
+
 export interface DashboardStats {
   totalCompetitions: number;
   activeParticipants: number;
