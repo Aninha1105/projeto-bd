@@ -18,6 +18,8 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [showSponsorshipForm, setShowSponsorshipForm] = useState(false);
 
+  console.log(user);
+
   useEffect(() => {
     if (!competition) return;
 
@@ -82,18 +84,19 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
     }
   };
 
-  const handleSponsorshipSubmit = async (amount: number) => {
+  const handleSponsorshipSubmit = async (amount: number, competitionId: string) => {
     try {
-      await api.post(`/competicaopatrocinador`, {
-        id_competicao: competition.id,
-        id_usuario_patro: user?.id,
+      const res = await api.post('/patrocinios', {
+        id_competicao: parseInt(competitionId),
+        id_usuario_patro: parseInt(user.id), // use o ID do usuário logado
         contribuicao: amount
       });
+
+      console.log('Patrocínio registrado com sucesso:', res.data);
       setShowSponsorshipForm(false);
-      const res = await api.get(`/competicaopatrocinador/competicao/${competition.id}`);
-      setSponsorships(res.data);
+      // opcional: mostrar toast, atualizar dados etc.
     } catch (err) {
-      console.error('Erro ao patrocinar', err);
+      console.error('Erro ao registrar patrocínio:', err);
     }
   };
   

@@ -1,4 +1,4 @@
-import { Competition, Participant, Team, Submission, User, DashboardStats } from '../types';
+import { Competition, Participant, Submission, User, DashboardStats, AuthUser } from '../types';
 
 export const mockUser: User = {
   id: '1',
@@ -8,6 +8,45 @@ export const mockUser: User = {
   photo: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
   role: 'admin'
 };
+
+export const mockAuthUsers: AuthUser[] = [
+  {
+    id: '1',
+    email: 'admin@maratonas.com',
+    password: 'admin123',
+    name: 'Ana Carolina Silva',
+    university: 'Universidade de São Paulo',
+    photo: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
+    role: 'admin'
+  },
+  {
+    id: '2',
+    email: 'organizadora@maratonas.com',
+    password: 'org123',
+    name: 'Maria Fernanda Costa',
+    university: 'Universidade Estadual de Campinas',
+    photo: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
+    role: 'organizer'
+  },
+  {
+    id: '3',
+    email: 'participante@maratonas.com',
+    password: 'part123',
+    name: 'Joana Lima Santos',
+    university: 'Universidade Federal do Rio de Janeiro',
+    photo: 'https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
+    role: 'participant'
+  },
+  {
+    id: '4',
+    email: 'patrocinador@maratonas.com',
+    password: 'sponsor123',
+    name: 'Roberto Silva Empresário',
+    university: 'Tech Solutions Inc.',
+    photo: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
+    role: 'sponsor'
+  }
+];
 
 export const mockCompetitions: Competition[] = [
   {
@@ -19,7 +58,18 @@ export const mockCompetitions: Competition[] = [
     registrations: 85,
     maxParticipants: 120,
     description: 'Competição de programação exclusiva para mulheres com foco em algoritmos e estruturas de dados.',
-    status: 'upcoming'
+    status: 'upcoming',
+    createdBy: '2',
+    collaborators: ['2'],
+    sponsorships: [
+      {
+        id: '1',
+        sponsorId: '4',
+        sponsorName: 'Roberto Silva Empresário',
+        amount: 5000,
+        contributedAt: '2024-01-10'
+      }
+    ]
   },
   {
     id: '2',
@@ -30,7 +80,10 @@ export const mockCompetitions: Competition[] = [
     registrations: 67,
     maxParticipants: 100,
     description: 'Desafio de programação com problemas de diferentes níveis de dificuldade.',
-    status: 'upcoming'
+    status: 'upcoming',
+    createdBy: '2',
+    collaborators: ['2'],
+    sponsorships: []
   },
   {
     id: '3',
@@ -41,7 +94,10 @@ export const mockCompetitions: Competition[] = [
     registrations: 92,
     maxParticipants: 150,
     description: 'Competição nacional de programação para estudantes universitárias.',
-    status: 'upcoming'
+    status: 'upcoming',
+    createdBy: '1',
+    collaborators: ['1', '2'],
+    sponsorships: []
   },
   {
     id: '4',
@@ -52,7 +108,10 @@ export const mockCompetitions: Competition[] = [
     registrations: 45,
     maxParticipants: 60,
     description: 'Hackathon de 24 horas focado em soluções tecnológicas.',
-    status: 'completed'
+    status: 'completed',
+    createdBy: '2',
+    collaborators: ['2'],
+    sponsorships: []
   }
 ];
 
@@ -64,8 +123,6 @@ export const mockParticipants: Participant[] = [
     birthDate: '2000-05-15',
     university: 'Universidade de São Paulo',
     photo: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
-    registrationStatus: 'confirmed',
-    registrationDate: '2024-01-15'
   },
   {
     id: '2',
@@ -74,8 +131,6 @@ export const mockParticipants: Participant[] = [
     birthDate: '1999-08-22',
     university: 'Universidade Estadual de Campinas',
     photo: 'https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
-    registrationStatus: 'confirmed',
-    registrationDate: '2024-01-20'
   },
   {
     id: '3',
@@ -84,8 +139,6 @@ export const mockParticipants: Participant[] = [
     birthDate: '2001-12-03',
     university: 'Universidade Federal do Rio de Janeiro',
     photo: 'https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
-    registrationStatus: 'pending',
-    registrationDate: '2024-01-25'
   },
   {
     id: '4',
@@ -94,51 +147,6 @@ export const mockParticipants: Participant[] = [
     birthDate: '2000-09-18',
     university: 'Universidade de Brasília',
     photo: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop&crop=face',
-    registrationStatus: 'confirmed',
-    registrationDate: '2024-01-30'
-  }
-];
-
-export const mockTeams: Team[] = [
-  {
-    id: '1',
-    name: 'Code Queens',
-    color: '#EC4899',
-    memberCount: 25,
-    totalSubmissions: 120,
-    approvedSubmissions: 95,
-    averageTime: '2:45:30',
-    ranking: 1
-  },
-  {
-    id: '2',
-    name: 'Tech Sisters',
-    color: '#8B5CF6',
-    memberCount: 18,
-    totalSubmissions: 89,
-    approvedSubmissions: 72,
-    averageTime: '3:12:15',
-    ranking: 2
-  },
-  {
-    id: '3',
-    name: 'Algorithm Angels',
-    color: '#06B6D4',
-    memberCount: 22,
-    totalSubmissions: 95,
-    approvedSubmissions: 68,
-    averageTime: '3:28:45',
-    ranking: 3
-  },
-  {
-    id: '4',
-    name: 'Binary Butterflies',
-    color: '#10B981',
-    memberCount: 15,
-    totalSubmissions: 67,
-    approvedSubmissions: 48,
-    averageTime: '3:55:20',
-    ranking: 4
   }
 ];
 

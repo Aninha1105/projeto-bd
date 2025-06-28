@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { X, Calendar, MapPin, Clock, Users, FileText, UserPlus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Calendar, MapPin, Clock, Users, FileText} from 'lucide-react';
 import { CompetitionFormData } from '../types';
-import { mockAuthUsers } from '../data/mockData';
+import { api } from '../api/api';
 
 interface CompetitionFormProps {
   onClose: () => void;
@@ -9,6 +9,8 @@ interface CompetitionFormProps {
 }
 
 const CompetitionForm: React.FC<CompetitionFormProps> = ({ onClose, onSubmit }) => {
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+
   const [formData, setFormData] = useState<CompetitionFormData>({
     name: '',
     date: '',
@@ -16,12 +18,26 @@ const CompetitionForm: React.FC<CompetitionFormProps> = ({ onClose, onSubmit }) 
     time: '',
     maxParticipants: 50,
     description: '',
-    collaborators: []
+    teamId: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // TODO: fetch organizers from API
-  const organizers = mockAuthUsers.filter(user => user.role === 'organizer');
+  useEffect(() => {
+    async function fetchTeams() {
+      try {
+        const res = await api.get('/equipes');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = res.data.map((e: any) => ({
+          id: e.id_equipe.toString(),
+          name: e.nome,
+        }));
+        setTeams(data);
+      } catch (err) {
+        console.error('Erro ao buscar equipes:', err);
+      }
+    }
+    fetchTeams();
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -57,6 +73,10 @@ const CompetitionForm: React.FC<CompetitionFormProps> = ({ onClose, onSubmit }) 
       newErrors.description = 'Descrição é obrigatória';
     }
 
+    if (!formData.teamId) {
+      newErrors.teamId = 'Selecione uma equipe responsável';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -68,19 +88,12 @@ const CompetitionForm: React.FC<CompetitionFormProps> = ({ onClose, onSubmit }) 
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (field: keyof CompetitionFormData, value: any) => {
     setFormData({ ...formData, [field]: value });
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' });
     }
-  };
-
-  const handleCollaboratorToggle = (collaboratorId: string) => {
-    const updatedCollaborators = formData.collaborators.includes(collaboratorId)
-      ? formData.collaborators.filter(id => id !== collaboratorId)
-      : [...formData.collaborators, collaboratorId];
-    
-    handleInputChange('collaborators', updatedCollaborators);
   };
 
   return (
@@ -214,34 +227,28 @@ const CompetitionForm: React.FC<CompetitionFormProps> = ({ onClose, onSubmit }) 
             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
           </div>
 
-          {/* Collaborators */}
+          {/* Team Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <UserPlus className="inline h-4 w-4 mr-2" />
-              Colaboradores (Organizadores)
+            <label htmlFor="teamId" className="block text-sm font-medium text-gray-700 mb-2">
+              <Users className="inline h-4 w-4 mr-2" />
+              Equipe Responsável *
             </label>
-            <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-3">
-              {organizers.map((equipe) => (
-                <label key={equipe.id} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                  <input
-                    type="checkbox"
-                    checked={formData.collaborators.includes(equipe.id)}
-                    onChange={() => handleCollaboratorToggle(equipe.id)}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                  <img
-                    alt={equipe.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{equipe.name}</p>
-                  </div>
-                </label>
+            <select
+              id="teamId"
+              value={formData.teamId}
+              onChange={(e) => handleInputChange('teamId', e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 ${
+                errors.teamId ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">Selecione uma equipe</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
               ))}
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              Selecione a equipe
-            </p>
+            </select>
+            {errors.teamId && <p className="text-red-500 text-sm mt-1">{errors.teamId}</p>}
           </div>
 
           {/* Actions */}

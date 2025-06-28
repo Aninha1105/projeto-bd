@@ -1,3 +1,5 @@
+// src/types/index.tsx
+
 export interface Competition {
   id: string;
   name: string;
@@ -20,19 +22,12 @@ export interface Participant {
   birthDate: string;
   university: string;
   photo?: string;
-  registrationStatus: 'confirmed' | 'pending' | 'cancelled';
-  registrationDate: string;
 }
 
 export interface Team {
   id: string;
   name: string;
-  color: string;
   memberCount: number;
-  totalSubmissions: number;
-  approvedSubmissions: number;
-  averageTime: string;
-  ranking: number;
 }
 
 export interface Submission {
@@ -49,13 +44,23 @@ export interface Submission {
   university: string;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  university: string;
+  photo?: string;
+  role: 'admin' | 'colaborador' | 'participante' | 'patrocinador';
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   university: string;
   photo?: string;
-  role: 'admin' | 'organizer' | 'participant' | 'sponsor';
+  role: 'admin' | 'colaborador' | 'participante' | 'patrocinador';
 }
 
 export interface Sponsorship {
@@ -66,27 +71,11 @@ export interface Sponsorship {
   contributedAt: string;
 }
 
-export interface Sponsorship {
-  id_competicao: number;
-  id_usuario_patro: number;
-  contribuicao: number;
-}
-
 export interface DashboardStats {
   totalCompetitions: number;
   activeParticipants: number;
   registeredTeams: number;
   monthlyRegistrations: { month: string; count: number }[];
-}
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
-  university: string;
-  photo?: string;
-  role: 'admin' | 'organizer' | 'participant' | 'sponsor';
 }
 
 export interface AuthContextType {
@@ -103,5 +92,11 @@ export interface CompetitionFormData {
   time: string;
   maxParticipants: number;
   description: string;
-  collaborators: string[];
-}</parameter>
+  teamId: string; // <--- novo campo
+}
+
+export interface SponsorshipData {
+  id_competicao: number;
+  id_usuario_patro: number;
+  contribuicao: number;
+}

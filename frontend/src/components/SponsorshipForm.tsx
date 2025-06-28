@@ -5,7 +5,7 @@ import { Competition } from '../types';
 interface SponsorshipFormProps {
   competition: Competition;
   onClose: () => void;
-  onSubmit: (amount: number) => void;
+  onSubmit: (amount: number, competitionId: string) => void;
 }
 
 const SponsorshipForm: React.FC<SponsorshipFormProps> = ({ competition, onClose, onSubmit }) => {
@@ -29,7 +29,7 @@ const SponsorshipForm: React.FC<SponsorshipFormProps> = ({ competition, onClose,
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateAmount()) {
-      onSubmit(parseFloat(amount));
+      onSubmit(parseFloat(amount), competition.id);
     }
   };
 
