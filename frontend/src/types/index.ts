@@ -53,7 +53,6 @@ export interface Sponsorship {
   sponsorId: string;
   sponsorName: string;
   amount: number;
-  contributedAt: string;
 }
 
 export interface DashboardStats {

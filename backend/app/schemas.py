@@ -31,16 +31,19 @@ class CompeticaoRead(CompeticaoBase):
 class UsuarioBase(BaseModel):
     nome: str
     email: str
+    senha_hash: str
     tipo: str
+    foto: Optional[bytes] = None
 
 class UsuarioCreate(UsuarioBase):
-    senha: str
+    pass
 
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
     email: Optional[str] = None
     tipo: Optional[str] = None
-    senha: Optional[str] = None  # ✅ senha opcional
+    senha_hash: Optional[str] = None  # ✅ senha opcional
+    foto: Optional[bytes] = None
 
 class UsuarioRead(UsuarioBase):
     id_usuario: int

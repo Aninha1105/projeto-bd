@@ -14,7 +14,10 @@ def create_competicao(db: Session, comp: schemas.CompeticaoCreate):
         nome=comp.nome,
         local=comp.local,
         data=comp.data,
-        id_equipe=comp.id_equipe
+        id_equipe=comp.id_equipe,
+        horario=comp.horario,
+        max_participantes=comp.max_participantes,
+        descricao=comp.descricao
     )
     db.add(db_comp)
     db.commit()
@@ -53,7 +56,8 @@ def create_usuario(db: Session, usuario: schemas.UsuarioCreate):
         nome=usuario.nome,
         email=usuario.email,
         senha_hash=hashed,
-        tipo=usuario.tipo
+        tipo=usuario.tipo,
+        foto=usuario.foto
     )
     db.add(db_user)
     db.commit()
@@ -253,7 +257,6 @@ def create_participante(db: Session, p: schemas.ParticipanteCreate):
     db_p = models.Participante(
         id_usuario=p.id_usuario,
         universidade=p.universidade,
-        foto=None
     )
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p
@@ -285,7 +288,6 @@ def get_patrocinador(db: Session, user_id: int):
 def create_patrocinador(db: Session, p: schemas.PatrocinadorCreate):
     db_p = models.Patrocinador(
         id_usuario=p.id_usuario,
-        logotipo=p.logo_base64
     )
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p

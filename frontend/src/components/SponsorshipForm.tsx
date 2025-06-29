@@ -29,7 +29,7 @@ const SponsorshipForm: React.FC<SponsorshipFormProps> = ({ competition, onClose,
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateAmount()) {
-      onSubmit(parseFloat(amount), competition.id);
+      onSubmit(parseFloat(amount)/100, competition.id);
     }
   };
 

@@ -86,7 +86,7 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
 
   const handleSponsorshipSubmit = async (amount: number, competitionId: string) => {
     try {
-      const res = await api.post('/patrocinios', {
+      const res = await api.post('/competicaopatrocinador', {
         id_competicao: parseInt(competitionId),
         id_usuario_patro: parseInt(user.id), // use o ID do usuário logado
         contribuicao: amount
