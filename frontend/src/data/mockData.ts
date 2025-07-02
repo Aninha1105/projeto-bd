@@ -216,3 +216,30 @@ export const mockDashboardStats: DashboardStats = {
     { month: 'Jun', count: 42 }
   ]
 };
+
+export const mockTeams: Team[] = [
+  {
+    id: '1',
+    name: 'Code Queens',
+    memberCount: 3,
+    collaborators: ['2', '5'],
+  },
+  {
+    id: '2',
+    name: 'Tech Sisters',
+    memberCount: 2,
+    collaborators: ['2', '6'],
+  },
+  {
+    id: '3',
+    name: 'Algorithm Angels',
+    memberCount: 4,
+    collaborators: ['2', '5', '6'],
+  },
+  {
+    id: '4',
+    name: 'Binary Butterflies',
+    memberCount: 2,
+    collaborators: ['5', '6'],
+  }
+];

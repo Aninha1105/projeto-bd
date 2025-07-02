@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, Clock, Users, Plus, Code, Award, DollarSign, Heart } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, Plus, Code, Award, DollarSign, Heart, Edit } from 'lucide-react';
 import { Competition, Participant, Sponsorship } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import RegistrationForm from './RegistrationForm';
 import SponsorshipForm from './SponsorshipForm';
 import { api } from '../api/api';
+import CompetitionEditForm from './CompetitionEditForm';
 
 interface CompetitionDetailProps {
   competition: Competition;
   onBack: () => void;
+  onUpdate?: (competition: Competition) => void;
+  onDelete?: (competitionId: string) => void;
 }
 
-const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBack }) => {
+const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBack, onUpdate, onDelete }) => {
   const { user } = useAuth();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [sponsorships, setSponsorships] = useState<Sponsorship[]>([]);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [showSponsorshipForm, setShowSponsorshipForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
 
   console.log(user);
 
@@ -67,10 +71,36 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
     user?.role === 'admin' ||
     (user?.role === 'colaborador' && competition.collaborators?.includes(user.id));
 
+  const canEditCompetition = () => {
+    return user?.role === 'admin' || 
+           (user?.role === 'colaborador'); 
+            //&& competition.collaborators?.includes(user.id));
+  };
+
   const canSponsor = () => user?.role === 'patrocinador';
   const canRegisterAsParticipant = () => user?.role === 'participante';
 
   const totalSponsorship = sponsorships.reduce((sum, s) => sum + s.amount, 0);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleEditSubmit = (data: any) => {
+    // TODO: update competition via API
+    const updatedCompetition = { ...competition, ...data };
+    console.log('Updated competition:', updatedCompetition);
+    if (onUpdate) {
+      onUpdate(updatedCompetition);
+    }
+    setShowEditForm(false);
+  };
+
+  const handleDelete = () => {
+    // TODO: delete competition via API
+    console.log('Deleting competition:', competition.id);
+    if (onDelete) {
+      onDelete(competition.id);
+    }
+    onBack();
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRegistrationSubmit = async (data: any) => {
@@ -101,16 +131,34 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
   };
   
   return (
-    <div className="space-y-6">
+     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <button onClick={onBack} className="p-2 hover:bg-purple-100 rounded-lg">
-          <ArrowLeft className="h-6 w-6 text-purple-600" />
-        </button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{competition.name}</h1>
-          <p className="text-lg text-gray-600 mt-1">{formatDate(competition.date)}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-purple-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-6 w-6 text-purple-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{competition.name}</h1>
+            <p className="text-lg text-gray-600 mt-1">{formatDate(competition.date)}</p>
+          </div>
         </div>
+        
+        {/* Edit/Delete Actions */}
+        {canEditCompetition() && (
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowEditForm(true)}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+            >
+              <Edit className="h-4 w-4" />
+              <span>Editar</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -363,6 +411,15 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
           competition={competition}
           onClose={() => setShowSponsorshipForm(false)}
           onSubmit={handleSponsorshipSubmit}
+        />
+      )}
+      {/* Edit Competition Modal */}
+      {showEditForm && (
+        <CompetitionEditForm
+          competition={competition}
+          onClose={() => setShowEditForm(false)}
+          onSubmit={handleEditSubmit}
+          onDelete={handleDelete}
         />
       )}
     </div>

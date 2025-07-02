@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Edit3, Mail, GraduationCap, Camera, X, User, Code, Award, Trophy } from 'lucide-react';
+import { Edit3, Mail, GraduationCap, Camera, X, User, Code, Award, Trophy, Trash2, AlertTriangle } from 'lucide-react';
 import { mockUser } from '../data/mockData';
+import { useAuth } from '../contexts/AuthContext';
 
 const Profile: React.FC = () => {
+  const { logout } = useAuth();
   const [user, setUser] = useState(mockUser);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editForm, setEditForm] = useState({
     name: user.name,
     university: user.university,
@@ -32,6 +35,12 @@ const Profile: React.FC = () => {
         setEditForm({ ...editForm, photo: file });
       }
     }
+  };
+
+  const handleDeleteAccount = () => {
+    // TODO: delete user account via API
+    console.log('Deleting user account...');
+    logout(); // Log out after deletion
   };
 
   return (
@@ -88,14 +97,21 @@ const Profile: React.FC = () => {
               </div>
             </div>
             
-            {/* Edit Button */}
-            <div className="mt-4 sm:mt-0">
+            {/* Action Buttons */}
+            <div className="mt-4 sm:mt-0 flex space-x-2">
               <button
                 onClick={() => setShowEditModal(true)}
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
               >
                 <Edit3 className="h-4 w-4" />
-                <span>Editar Perfil</span>
+                <span>Editar</span>
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Excluir Conta</span>
               </button>
             </div>
           </div>
@@ -178,6 +194,40 @@ const Profile: React.FC = () => {
                 <span className="text-sm font-medium text-gray-700">Eventos Finalizados</span>
               </div>
               <span className="text-lg font-bold text-indigo-600">5</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Achievements */}
+      <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Conquistas</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div className="p-2 bg-yellow-100 rounded-full">
+              <Trophy className="h-6 w-6 text-yellow-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Organizadora Expert</p>
+              <p className="text-sm text-gray-600">5+ competições organizadas</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="p-2 bg-blue-100 rounded-full">
+              <Code className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Tech Leader</p>
+              <p className="text-sm text-gray-600">Liderança em tecnologia</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="p-2 bg-purple-100 rounded-full">
+              <Award className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Mentora</p>
+              <p className="text-sm text-gray-600">Apoio a novas programadoras</p>
             </div>
           </div>
         </div>
@@ -269,6 +319,53 @@ const Profile: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Excluir Conta
+              </h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão permanentemente removidos.
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-red-800">Consequências da exclusão:</p>
+                    <ul className="text-sm text-red-700 mt-1 space-y-1">
+                      <li>• Perda de acesso a todas as competições</li>
+                      <li>• Remoção de histórico de participações</li>
+                      <li>• Cancelamento de inscrições ativas</li>
+                      <li>• Dados não poderão ser recuperados</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Excluir Conta
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Home, Trophy, /*UserPlus,*/ BarChart3, User, Code, LogOut/*, Plus*/ } from 'lucide-react';
+import { Menu, X, Home, Trophy, Users, BarChart3, User, Code, LogOut/*, Plus*/ } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
@@ -22,12 +22,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentScreen, onScreenChange
 
     if (user?.role === 'admin') {
       roleSpecificItems.push(
+        { id: 'teams', name: 'Equipes', icon: Users, roles: ['admin'] },
         //{ id: 'registrations', name: 'Inscrições', icon: UserPlus, roles: ['admin'] },
         { id: 'statistics', name: 'Estatísticas', icon: BarChart3, roles: ['admin'] }
         //{ id: 'create-competition', name: 'Criar Evento', icon: Plus, roles: ['admin'] }
       );
     } else if (user?.role === 'colaborador') {
       roleSpecificItems.push(
+        { id: 'teams', name: 'Equipes', icon: Users, roles: ['colaborador'] },
         { id: 'statistics', name: 'Estatísticas', icon: BarChart3, roles: ['colaborador'] }
         //{ id: 'create-competition', name: 'Criar Evento', icon: Plus, roles: ['colaborador'] },
         //{ id: 'registrations', name: 'Minhas Inscrições', icon: UserPlus, roles: ['colaborador'] }

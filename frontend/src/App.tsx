@@ -8,6 +8,7 @@ import CompetitionDetail from './components/CompetitionDetail';
 import CompetitionForm from './components/CompetitionForm';
 import Statistics from './components/Statistics';
 import Profile from './components/Profile';
+import TeamManagement from './components/TeamManagement';
 import { Competition, CompetitionFormData } from './types';
 import { api } from './api/api';
 
@@ -87,6 +88,8 @@ const AppContent: React.FC = () => {
             onCreateCompetition={handleCreateCompetition}
           />
         );
+      case 'teams':
+        return <TeamManagement />;
       case 'registrations':
         if (user?.role === 'admin') {
           return <CompetitionsList onViewDetails={handleViewCompetitionDetails} />;

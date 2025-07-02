@@ -27,7 +27,9 @@ export interface Team {
   id: string;
   name: string;
   memberCount: number;
+  collaborators: string[];
 }
+
 
 export interface AuthUser {
   id: string;
