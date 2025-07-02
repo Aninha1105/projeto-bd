@@ -24,7 +24,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
     time: competition.time,
     maxParticipants: competition.maxParticipants,
     description: competition.description || '',
-    timeId: competition.timeId || '',
+    teamId: competition.teamId || '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

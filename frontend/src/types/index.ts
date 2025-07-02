@@ -9,6 +9,7 @@ export interface Competition {
   registrations: number;
   maxParticipants: number;
   description?: string;
+  teamId: string;
   status: 'upcoming' | 'ongoing' | 'completed';
   createdBy?: string;
   collaborators?: string[];

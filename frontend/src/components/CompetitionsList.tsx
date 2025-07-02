@@ -31,6 +31,7 @@ const CompetitionsList: React.FC<CompetitionsListProps> = ({ onViewDetails, onCr
           location: c.local || '',
           date: c.data,
           time: c.horario || '',
+          teamId: c.teamId || '',
           registrations: c.num_inscritos || 0,
           maxParticipants: c.max_participantes || 0,
           status: (c.status ?? 'upcoming').toLowerCase() as 'upcoming' | 'ongoing' | 'completed',
