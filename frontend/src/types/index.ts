@@ -84,3 +84,15 @@ export interface SponsorshipData {
   id_usuario_patro: number;
   contribuicao: number;
 }
+
+export interface UserRegistrationData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: 'admin' | 'organizer' | 'participant' | 'sponsor';
+  photo?: File | null;
+  collaboratorRole?: 'setter' | 'tester' | 'organizador' | 'professor';
+  institution?: string;
+  teamId?: number;
+}

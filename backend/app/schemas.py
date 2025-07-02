@@ -50,12 +50,12 @@ class UsuarioRead(UsuarioBase):
 
     class Config:
         from_attributes = True
-
+        
 # Colaborador (herda de Usuario)
 class ColaboradorBase(BaseModel):
     id_usuario: int
     papel: str
-    id_equipe: int
+    id_equipe: Optional[int] = None
     instituicao: Optional[str] = None
 
 class ColaboradorCreate(ColaboradorBase):

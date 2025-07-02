@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, Code, AlertCircle, Loader } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Code, AlertCircle, Loader, UserPlus} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import UserRegistration from './UserRegistration';
+import { UserRegistrationData } from '../types';
 
 const Login: React.FC = () => {
   const { login, isLoading } = useAuth();
@@ -11,6 +13,7 @@ const Login: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [showRegistration, setShowRegistration] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -50,6 +53,11 @@ const Login: React.FC = () => {
     if (loginError) {
       setLoginError('');
     }
+  };
+
+  const handleRegistrationSubmit = () => {
+    console.log('Cadastro concluído!');
+    setShowRegistration(false);
   };
 
   return (
@@ -152,6 +160,20 @@ const Login: React.FC = () => {
             </button>
           </form>
 
+          {/* Registration Link */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 text-sm">
+              Não tem uma conta?{' '}
+              <button
+                onClick={() => setShowRegistration(true)}
+                className="text-purple-600 hover:text-purple-700 font-medium transition-colors inline-flex items-center space-x-1"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Cadastre-se aqui</span>
+              </button>
+            </p>
+          </div>
+
           {/* Demo Credentials */}
           <div className="mt-8 p-4 bg-gray-50 rounded-lg">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Credenciais de Demonstração:</h3>
@@ -182,6 +204,14 @@ const Login: React.FC = () => {
             © 2024 Maratonas Femininas. Empoderamento através da programação.
           </p>
         </div>
+
+        {/* Registration Modal */}
+        {showRegistration && (
+          <UserRegistration
+            onClose={() => setShowRegistration(false)}
+            onSubmit={handleRegistrationSubmit}
+          />
+        )}
       </div>
     </div>
   );

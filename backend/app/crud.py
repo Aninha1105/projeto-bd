@@ -1,6 +1,8 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 from . import models, schemas
 from .security import hash_password
+import base64
 
 # Competições
 def get_competicoes(db: Session, skip: int = 0, limit: int = 100):
@@ -87,6 +89,29 @@ def delete_usuario(db: Session, user_id: int):
         return False
     db.delete(db_user); db.commit()
     return True
+
+def update_usuario_foto(db: Session, user_id: int, foto_bytes: bytes):
+    # Busca o usuário
+    db_user = db.query(models.Usuario).filter(models.Usuario.id_usuario == user_id).first()
+    if not db_user:
+        return None
+
+    # Atualiza o campo de foto (supondo que seja Column(LargeBinary))
+    db_user.foto = foto_bytes
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def get_usuario_com_foto_base64(db: Session, user_id: int) -> Optional[models.Usuario]:
+    user = db.query(models.Usuario).filter(models.Usuario.id_usuario == user_id).first()
+    if not user:
+        return None
+
+    if user.foto:
+        user.foto = base64.b64encode(user.foto).decode("utf-8")
+
+    return user
 
 # Equipes
 def get_equipes(db: Session, skip=0, limit=100):
@@ -224,7 +249,8 @@ def create_colaborador(db: Session, c: schemas.ColaboradorCreate):
     db_c = models.Colaborador(
         id_usuario=c.id_usuario,
         papel=c.papel,
-        id_equipe=c.id_equipe
+        id_equipe=c.id_equipe or None,
+        instituicao=getattr(c, "instituicao", None)
     )
     db.add(db_c); db.commit(); db.refresh(db_c)
     return db_c
@@ -256,7 +282,7 @@ def get_participante(db: Session, user_id: int):
 def create_participante(db: Session, p: schemas.ParticipanteCreate):
     db_p = models.Participante(
         id_usuario=p.id_usuario,
-        universidade=p.universidade,
+        instituicao=p.instituicao,  
     )
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p

@@ -69,7 +69,7 @@ class Colaborador(Base):
     __tablename__ = "colaborador"
     id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), primary_key=True)
     papel = Column(Enum(ColaboradorPapel), nullable=False)
-    id_equipe = Column(Integer, ForeignKey("equipe_colaboradores.id_equipe"), nullable=False)
+    id_equipe = Column(Integer, ForeignKey("equipe_colaboradores.id_equipe"), nullable=True)
     instituicao = Column(String(100), nullable=True)
 
     usuario = relationship("Usuario", back_populates="colaborador")
@@ -78,7 +78,7 @@ class Colaborador(Base):
     @hybrid_property
     def num_competicoes(self):
         # Competicoes via equipe
-        return len(self.equipe.competicoes)
+        return len(self.equipe.competicoes) if self.equipe else 0
 
 # 4. Participante
 class Participante(Base):

@@ -1,5 +1,5 @@
 # backend/app/routers/usuarios.py
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadFile, File
 from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
@@ -35,3 +35,8 @@ def remover_usuario(user_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(404, "Usuário não encontrado")
     return Response(status_code=204)
+
+@router.post("/{user_id}/foto", response_model=schemas.UsuarioRead)
+async def upload_user_photo(user_id: int, foto: UploadFile = File(...), db: Session = Depends(get_db)):
+    user = crud.update_usuario_foto(db, user_id, await foto.read())
+    return crud.get_usuario_com_foto_base64(db, user_id)
