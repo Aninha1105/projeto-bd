@@ -73,8 +73,8 @@ def update_usuario(db: Session, user_id: int, u_in: schemas.UsuarioUpdate):
     
     data = u_in.dict(exclude_unset=True)
     # Se alterar senha, gerar hash
-    if 'senha' in data:
-        data['senha_hash'] = hash_password(data.pop('senha'))
+    if 'senha_hash' in data:
+        data['senha_hash'] = hash_password(data.pop('senha_hash'))
 
     for field, value in data.items():
         setattr(db_user, field, value)
@@ -103,15 +103,20 @@ def update_usuario_foto(db: Session, user_id: int, foto_bytes: bytes):
     db.refresh(db_user)
     return db_user
 
-def get_usuario_com_foto_base64(db: Session, user_id: int) -> Optional[models.Usuario]:
+def get_usuario_com_foto_base64(db: Session, user_id: int):
     user = db.query(models.Usuario).filter(models.Usuario.id_usuario == user_id).first()
     if not user:
         return None
-
-    if user.foto:
-        user.foto = base64.b64encode(user.foto).decode("utf-8")
-
-    return user
+    foto_b64 = base64.b64encode(user.foto).decode("utf-8") if user.foto else None
+    # Retorne um dicionário ou um novo objeto, não altere user.foto
+    return {
+        "id_usuario": user.id_usuario,
+        "nome": user.nome,
+        "email": user.email,
+        "senha_hash": user.senha_hash,
+        "tipo": user.tipo,
+        "foto": foto_b64
+    }
 
 # Equipes
 def get_equipes(db: Session, skip=0, limit=100):
@@ -255,15 +260,20 @@ def create_colaborador(db: Session, c: schemas.ColaboradorCreate):
     db.add(db_c); db.commit(); db.refresh(db_c)
     return db_c
 
-def update_colaborador(db: Session, user_id: int, c_in: schemas.ColaboradorCreate):
+def update_colaborador(db: Session, user_id: int, c_in: schemas.ColaboradorUpdate):
     db_c = get_colaborador(db, user_id)
     if not db_c:
         return None
-    for field, value in c_in.dict(exclude_unset=True).items():
+    data = c_in.dict(exclude_unset=True)
+    if "papel" in data and data["papel"] is not None:
+        # Converte string para Enum se necessário
+        if not isinstance(data["papel"], models.ColaboradorPapel):
+            data["papel"] = models.ColaboradorPapel(data["papel"])
+    for field, value in data.items():
         setattr(db_c, field, value)
-    db.commit(); db.refresh(db_c)
+    db.commit()
+    db.refresh(db_c)
     return db_c
-
 
 def delete_colaborador(db: Session, user_id: int):
     db_c = get_colaborador(db, user_id)
@@ -287,7 +297,7 @@ def create_participante(db: Session, p: schemas.ParticipanteCreate):
     db.add(db_p); db.commit(); db.refresh(db_p)
     return db_p
 
-def update_participante(db: Session, user_id: int, p_in: schemas.ParticipanteCreate):
+def update_participante(db: Session, user_id: int, p_in: schemas.ParticipanteUpdate):
     db_p = get_participante(db, user_id)
     if not db_p:
         return None

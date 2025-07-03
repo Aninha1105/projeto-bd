@@ -79,6 +79,10 @@ class Colaborador(Base):
     def num_competicoes(self):
         # Competicoes via equipe
         return len(self.equipe.competicoes) if self.equipe else 0
+    
+    @hybrid_property
+    def nome_equipe(self):
+        return self.equipe.nome if self.equipe else None
 
 # 4. Participante
 class Participante(Base):
@@ -111,6 +115,10 @@ class Patrocinador(Base):
     def num_competicoes(self):
         # Competicoes via competicao_patrocinador
         return len(self.competicoes)
+    
+    @hybrid_property
+    def total_contribuicao(self):
+        return sum(link.contribuicao for link in self.competicoes)
 
 # 6. Competição
 class Competicao(Base):

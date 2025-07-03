@@ -55,6 +55,8 @@ export interface Sponsorship {
   id: string;
   sponsorId: string;
   sponsorName: string;
+  sponsorEmail: string;
+  sponsorPhoto: string;
   amount: number;
 }
 

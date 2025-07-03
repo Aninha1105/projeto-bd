@@ -1,31 +1,134 @@
-import React, { useState } from 'react';
-import { Edit3, Mail, GraduationCap, Camera, X, User, Code, Award, Trophy, Trash2, AlertTriangle } from 'lucide-react';
-import { mockUser } from '../data/mockData';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from 'react';
+import { Edit3, Mail, GraduationCap, Camera, X, User, Code, Award, Trophy, Trash2, AlertTriangle, Users, FileText, DollarSign, Building, UserCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../api/api';
 
 const Profile: React.FC = () => {
-  const { logout } = useAuth();
-  const [user, setUser] = useState(mockUser);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: user.name,
-    university: user.university,
-    photo: null as File | null
+  const { logout, user: authUser } = useAuth();
+
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    university: '',
+    role: '',
+    photo: null as string | null,
+    collaboratorRole: ''
   });
 
-  // TODO: fetch user profile from API
+  const [activityStats, setActivityStats] = useState<{ [key: string]: string | number }>({});
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const [editForm, setEditForm] = useState({
+    name: '',
+    photo: null as File | null,
+    // Campos específicos por tipo de usuário
+    university: (user.role === 'participante' || user.role === 'colaborador') ? user.university : undefined,
+    collaboratorRole: user.role === 'colaborador' ? user.collaboratorRole : undefined,
+  });
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!authUser) return;
+      try {
+        const response = await api.get(`/usuarios/${authUser.id}`);
+        const u = response.data;
+
+        let university = '';
+        let collaboratorRole = '';
+        const stats: { [key: string]: string | number } = {};
+
+        if (u.tipo === 'participante') {
+          const res = await api.get(`/participantes/${authUser.id}`);
+          university = res.data.instituicao;
+          stats.numInscricoes = res.data.num_competicoes;
+          stats.numSubmissoes = res.data.num_submissoes;
+        } else if (u.tipo === 'colaborador') {
+          const res = await api.get(`/colaboradores/${authUser.id}`);
+          university = res.data.instituicao;
+          collaboratorRole = res.data.papel;
+          stats.nomeEquipe = res.data.nome_equipe || 'Não vinculado';
+          stats.numCompeticoes = res.data.num_competicoes;
+        } else if (u.tipo === 'patrocinador') {
+          const res = await api.get(`/patrocinadores/${authUser.id}`);
+          stats.numCompeticoes = res.data.num_competicoes;
+          stats.totalContribuido = res.data.total_contribuicao;
+        }
+
+        setUser({
+          name: u.nome,
+          email: u.email,
+          university,
+          role: u.tipo,
+          photo: u.foto ? `data:image/jpeg;base64,${u.foto}` : null,
+          collaboratorRole: collaboratorRole,
+        });
+
+        setEditForm({
+          name: u.nome,
+          university,
+          photo: null,
+          collaboratorRole
+        });
+
+        setActivityStats(stats);
+      } catch (error) {
+        console.error('Erro ao carregar dados do perfil:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [authUser]);
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: update user profile via API
-    setUser({
-      ...user,
-      name: editForm.name,
-      university: editForm.university,
-      // In a real app, photo would be uploaded and URL returned
-    });
-    setShowEditModal(false);
+    if (!authUser) return;
+
+    try {
+      console.log('Dados para update:', {
+        nome: editForm.name,
+        universidade: editForm.university,
+        role: user.role,
+        collaboratorRole: editForm.collaboratorRole
+      });
+
+      if (user.role === 'colaborador') {
+        const colaboradorPayload: any = {
+          instituicao: editForm.university
+        };
+        if (editForm.collaboratorRole) {
+          colaboradorPayload.papel = editForm.collaboratorRole;
+        }
+        await api.put(`/colaboradores/${authUser.id}`, colaboradorPayload);
+      } else if (user.role === 'participante') {
+        await api.put(`/participantes/${authUser.id}`, {
+          instituicao: editForm.university
+        });
+      }
+
+      if (editForm.photo) {
+        const photoForm = new FormData();
+        photoForm.append('foto', editForm.photo);
+        await api.post(`/usuarios/${authUser.id}/foto`, photoForm, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+
+      await api.put(`/usuarios/${authUser.id}`, {
+        nome: editForm.name
+      });
+
+      setShowEditModal(false);
+      window.location.reload();
+    } catch (error: any) {
+      if (error.response) {
+        console.error('Erro ao atualizar perfil:', error.response.data);
+      } else {
+        console.error('Erro ao atualizar perfil:', error);
+      }
+    }
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,10 +141,13 @@ const Profile: React.FC = () => {
   };
 
   const handleDeleteAccount = () => {
-    // TODO: delete user account via API
     console.log('Deleting user account...');
-    logout(); // Log out after deletion
+    logout();
   };
+
+  if (!user.name) {
+    return <p className="text-gray-500">Carregando perfil...</p>;
+  }
 
   return (
     <div className="space-y-6">
@@ -142,6 +248,7 @@ const Profile: React.FC = () => {
                 <p className="font-medium text-gray-900">{user.email}</p>
               </div>
             </div>
+            {user.role != 'patrocinador' && user.role != 'admin' && (
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-indigo-100 rounded-lg">
                 <GraduationCap className="h-5 w-5 text-indigo-600" />
@@ -151,6 +258,7 @@ const Profile: React.FC = () => {
                 <p className="font-medium text-gray-900">{user.university}</p>
               </div>
             </div>
+            )}
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Award className="h-5 w-5 text-green-600" />
@@ -167,68 +275,60 @@ const Profile: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Resumo de Atividades</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Trophy className="h-5 w-5 text-purple-600" />
-                <span className="text-sm font-medium text-gray-700">Competições Organizadas</span>
-              </div>
-              <span className="text-lg font-bold text-purple-600">8</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <User className="h-5 w-5 text-pink-600" />
-                <span className="text-sm font-medium text-gray-700">Inscrições Aprovadas</span>
-              </div>
-              <span className="text-lg font-bold text-pink-600">156</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Code className="h-5 w-5 text-green-600" />
-                <span className="text-sm font-medium text-gray-700">Submissões Validadas</span>
-              </div>
-              <span className="text-lg font-bold text-green-600">89</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Award className="h-5 w-5 text-indigo-600" />
-                <span className="text-sm font-medium text-gray-700">Eventos Finalizados</span>
-              </div>
-              <span className="text-lg font-bold text-indigo-600">5</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Achievements */}
-      <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Conquistas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <div className="p-2 bg-yellow-100 rounded-full">
-              <Trophy className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">Organizadora Expert</p>
-              <p className="text-sm text-gray-600">5+ competições organizadas</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <Code className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">Tech Leader</p>
-              <p className="text-sm text-gray-600">Liderança em tecnologia</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <div className="p-2 bg-purple-100 rounded-full">
-              <Award className="h-6 w-6 text-purple-600" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">Mentora</p>
-              <p className="text-sm text-gray-600">Apoio a novas programadoras</p>
-            </div>
+            {user.role === 'participante' && (
+              <>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Users className="h-5 w-5 text-purple-600" />
+                    <span className="text-sm font-medium text-gray-700">Inscrições</span>
+                  </div>
+                  <span className="text-lg font-bold text-purple-600">{activityStats.numInscricoes || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="h-5 w-5 text-pink-600" />
+                    <span className="text-sm font-medium text-gray-700">Submissões</span>
+                  </div>
+                  <span className="text-lg font-bold text-pink-600">{activityStats.numSubmissoes || 0}</span>
+                </div>
+              </>
+            )}
+            {user.role === 'colaborador' && (
+              <>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Users className="h-5 w-5 text-green-600" />
+                    <span className="text-sm font-medium text-gray-700">Equipe</span>
+                  </div>
+                  <span className="text-lg font-bold text-green-600">{activityStats.nomeEquipe || '—'}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Trophy className="h-5 w-5 text-indigo-600" />
+                    <span className="text-sm font-medium text-gray-700">Competições Organizadas</span>
+                  </div>
+                  <span className="text-lg font-bold text-indigo-600">{activityStats.numCompeticoes || 0}</span>
+                </div>
+              </>
+            )}
+            {user.role === 'patrocinador' && (
+              <>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Trophy className="h-5 w-5 text-purple-600" />
+                    <span className="text-sm font-medium text-gray-700">Competições Patrocinadas</span>
+                  </div>
+                  <span className="text-lg font-bold text-purple-600">{activityStats.numCompeticoes || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <span className="text-sm font-medium text-gray-700">Total Contribuído</span>
+                  </div>
+                  <span className="text-lg font-bold text-green-600">R$ {activityStats.totalContribuido || '0,00'}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -236,7 +336,7 @@ const Profile: React.FC = () => {
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">Editar Perfil</h3>
               <button
@@ -251,6 +351,7 @@ const Profile: React.FC = () => {
               {/* Name */}
               <div>
                 <label htmlFor="editName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <User className="inline h-4 w-4 mr-2" />
                   Nome Completo
                 </label>
                 <input
@@ -263,24 +364,68 @@ const Profile: React.FC = () => {
                 />
               </div>
 
-              {/* University */}
-              <div>
-                <label htmlFor="editUniversity" className="block text-sm font-medium text-gray-700 mb-2">
-                  Universidade
-                </label>
-                <input
-                  type="text"
-                  id="editUniversity"
-                  value={editForm.university}
-                  onChange={(e) => setEditForm({ ...editForm, university: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
-                />
-              </div>
+              {/* Campos específicos para Participante */}
+              {user.role === 'participante' && (
+                <div>
+                  <label htmlFor="editUniversity" className="block text-sm font-medium text-gray-700 mb-2">
+                    <GraduationCap className="inline h-4 w-4 mr-2" />
+                    Universidade
+                  </label>
+                  <input
+                    type="text"
+                    id="editUniversity"
+                    value={editForm.university || ''}
+                    onChange={(e) => setEditForm({ ...editForm, university: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Campos específicos para Colaborador */}
+              {user.role === 'colaborador' && (
+                <>
+                  <div>
+                    <label htmlFor="editInstitution" className="block text-sm font-medium text-gray-700 mb-2">
+                      <Building className="inline h-4 w-4 mr-2" />
+                      Instituição
+                    </label>
+                    <input
+                      type="text"
+                      id="editInstitution"
+                      value={editForm.university || ''}
+                      onChange={(e) => setEditForm({ ...editForm, university: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="editCollaboratorRole" className="block text-sm font-medium text-gray-700 mb-2">
+                      <UserCheck className="inline h-4 w-4 mr-2" />
+                      Papel do Colaborador
+                    </label>
+                    <select
+                      id="editCollaboratorRole"
+                      value={editForm.collaboratorRole || ''}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      onChange={(e) => setEditForm({ ...editForm, collaboratorRole: e.target.value as any })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="">Selecione o papel</option>
+                      <option value="setter">Setter</option>
+                      <option value="tester">Tester</option>
+                      <option value="organizador">Organizador</option>
+                      <option value="professor">Professor</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
               {/* Photo Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Camera className="inline h-4 w-4 mr-2" />
                   Foto de Perfil
                 </label>
                 <div className="flex items-center space-x-4">

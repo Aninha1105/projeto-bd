@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
@@ -21,11 +21,12 @@ def criar_participante(p: schemas.ParticipanteCreate, db: Session = Depends(get_
     return crud.create_participante(db, p)
 
 @router.put("/{user_id}", response_model=schemas.ParticipanteRead)
-def alterar_participante(user_id: int, p: schemas.ParticipanteCreate, db: Session = Depends(get_db)):
+def alterar_participante(user_id: int, p: schemas.ParticipanteUpdate, db: Session = Depends(get_db)):
     updated = crud.update_participante(db, user_id, p)
     if not updated:
         raise HTTPException(404, "Participante não encontrada")
-    return updated
+    # Sempre retorne o participante atualizado do banco
+    return crud.get_participante(db, user_id)
 
 @router.delete("/{user_id}", status_code=204)
 def remover_participante(user_id: int, db: Session = Depends(get_db)):

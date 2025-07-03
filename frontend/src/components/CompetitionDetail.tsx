@@ -46,10 +46,10 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setSponsorships(patrocRes.data.map((patrocinio: any) => ({
-          id: patrocinio.id,
+          id: patrocinio.id_link,
           sponsorName: patrocinio.patrocinador.usuario.nome,
           sponsorEmail: patrocinio.patrocinador.usuario.email,
-          sponsorPhoto: patrocinio.patrocinador.usuario.foto,
+          // sponsorPhoto: patrocinio.patrocinador.usuario.foto, // Comentado para evitar erro
           amount: patrocinio.contribuicao,
         })));
 
@@ -235,11 +235,13 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
                         <Heart className="h-4 w-4 text-green-600" />
                       </div>
                       <div>
+                        {/*
                         <img
                           src={s.sponsorPhoto || "https://via.placeholder.com/40"}
                           alt={s.sponsorName}
                           className="w-10 h-10 rounded-full object-cover"
                         />
+                        */}
                         <p className="font-medium text-gray-900">{s.sponsorName}</p>
                         <p className="text-sm text-gray-600">{s.sponsorEmail}</p>
                       </div>

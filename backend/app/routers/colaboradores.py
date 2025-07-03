@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
-from .. import crud, schemas
+from .. import crud, schemas, models
 from ..database import get_db
 
 router = APIRouter(prefix="/colaboradores", tags=["Colaboradores"])
@@ -21,11 +21,11 @@ def criar_colaborador(c: schemas.ColaboradorCreate, db: Session = Depends(get_db
     return crud.create_colaborador(db, c)
 
 @router.put("/{user_id}", response_model=schemas.ColaboradorRead)
-def alterar_colaborador(user_id: int, c: schemas.ColaboradorCreate, db: Session = Depends(get_db)):
-    updated = crud.update_colaborador(db, user_id, c)
+def alterar_colaborador(user_id: int, c_in: schemas.ColaboradorUpdate, db: Session = Depends(get_db)):
+    updated = crud.update_colaborador(db, user_id, c_in)
     if not updated:
-        raise HTTPException(404, "Colaborador não encontrado")
-    return updated
+        raise HTTPException(404, "Colaborador não encontrado")  
+    return crud.get_colaborador(db, user_id)
 
 @router.delete("/{user_id}", status_code=204)
 def remover_colaborador(user_id: int, db: Session = Depends(get_db)):

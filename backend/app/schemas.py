@@ -33,17 +33,13 @@ class UsuarioBase(BaseModel):
     email: str
     senha_hash: str
     tipo: str
-    foto: Optional[bytes] = None
+    foto: Optional[str] = None
 
 class UsuarioCreate(UsuarioBase):
     pass
 
 class UsuarioUpdate(BaseModel):
     nome: Optional[str] = None
-    email: Optional[str] = None
-    tipo: Optional[str] = None
-    senha_hash: Optional[str] = None  # ✅ senha opcional
-    foto: Optional[bytes] = None
 
 class UsuarioRead(UsuarioBase):
     id_usuario: int
@@ -54,7 +50,7 @@ class UsuarioRead(UsuarioBase):
 # Colaborador (herda de Usuario)
 class ColaboradorBase(BaseModel):
     id_usuario: int
-    papel: str
+    papel: Optional[str] = None
     id_equipe: Optional[int] = None
     instituicao: Optional[str] = None
 
@@ -64,10 +60,15 @@ class ColaboradorCreate(ColaboradorBase):
 class ColaboradorRead(ColaboradorBase):
     # atributo virtual
     num_competicoes: int
+    nome_equipe: Optional[str]
     # atributos de herança
-    usuario: UsuarioRead
+    usuario: UsuarioUpdate
     class Config:
         from_attributes = True
+
+class ColaboradorUpdate(BaseModel):
+    instituicao: Optional[str] = None
+    papel: Optional[str] = None
 
 # Participante (herda de Usuario)
 class ParticipanteBase(BaseModel):
@@ -82,9 +83,12 @@ class ParticipanteRead(ParticipanteBase):
     num_submissoes: int
     num_competicoes: int
     # atributos de herança
-    usuario: UsuarioRead
+    usuario: UsuarioUpdate
     class Config:
         from_attributes = True
+
+class ParticipanteUpdate(BaseModel):
+    instituicao: Optional[str] = None
 
 # Patrocinador (herda de Usuario)
 class PatrocinadorBase(BaseModel):
@@ -96,8 +100,9 @@ class PatrocinadorCreate(PatrocinadorBase):
 class PatrocinadorRead(PatrocinadorBase):
     # atributo virtual
     num_competicoes: int
+    total_contribuicao: float
     # atributos de herança
-    usuario: UsuarioRead
+    usuario: UsuarioUpdate  # <-- troque de UsuarioUpdate para UsuarioRead
     class Config:
         from_attributes = True
 
