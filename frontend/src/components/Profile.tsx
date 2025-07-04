@@ -140,9 +140,14 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleDeleteAccount = () => {
-    console.log('Deleting user account...');
-    logout();
+  const handleDeleteAccount = async () => {
+    if (!authUser) return;
+    try {
+      await api.delete(`/usuarios/${authUser.id}`);
+      logout();
+    } catch (error) {
+      console.error('Erro ao excluir conta:', error);
+    }
   };
 
   if (!user.name) {

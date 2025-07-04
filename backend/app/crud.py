@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from . import models, schemas
 from .security import hash_password
 import base64
@@ -84,11 +85,14 @@ def update_usuario(db: Session, user_id: int, u_in: schemas.UsuarioUpdate):
 
 
 def delete_usuario(db: Session, user_id: int):
-    db_user = get_usuario(db, user_id)
-    if not db_user:
-        return False
-    db.delete(db_user); db.commit()
-    return True
+    # Chama a procedure deletar_usuario_completo
+    try:
+        db.execute(text("CALL deletar_usuario_completo(:uid)"), {"uid": user_id})
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise e
 
 def update_usuario_foto(db: Session, user_id: int, foto_bytes: bytes):
     # Busca o usuário

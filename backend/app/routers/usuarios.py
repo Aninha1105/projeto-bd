@@ -4,6 +4,7 @@ from fastapi import Body
 from sqlalchemy.orm import Session
 from .. import crud, schemas, models
 from ..database import get_db
+import traceback
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários"])
 
@@ -35,9 +36,15 @@ def alterar_usuario(usuario_id: int, usuario: schemas.UsuarioUpdate, db: Session
 
 @router.delete("/{user_id}", status_code=204)
 def remover_usuario(user_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_usuario(db, user_id)
-    if not success:
+    user = db.query(models.Usuario).filter(models.Usuario.id_usuario == user_id).first()
+    if not user:
         raise HTTPException(404, "Usuário não encontrado")
+    try:
+        crud.delete_usuario(db, user_id)
+    except Exception as e:
+        print(f"Erro ao deletar usuário {user_id}: {e}")
+        traceback.print_exc()  # <-- Adicione esta linha para mostrar o stack trace completo
+        raise HTTPException(500, f"Erro ao deletar usuário: {e}")
     return Response(status_code=204)
 
 @router.post("/{user_id}/foto", response_model=schemas.UsuarioRead)
