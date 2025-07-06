@@ -83,23 +83,31 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
   const totalSponsorship = sponsorships.reduce((sum, s) => sum + s.amount, 0);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleEditSubmit = (data: any) => {
-    // TODO: update competition via API
-    const updatedCompetition = { ...competition, ...data };
-    console.log('Updated competition:', updatedCompetition);
-    if (onUpdate) {
-      onUpdate(updatedCompetition);
+  const handleEditSubmit = async (data: any) => {
+    try {
+      // A API já foi chamada no CompetitionEditForm, aqui apenas atualizamos o estado local
+      const updatedCompetition = { ...competition, ...data };
+      console.log('Updated competition:', updatedCompetition);
+      if (onUpdate) {
+        onUpdate(updatedCompetition);
+      }
+      setShowEditForm(false);
+    } catch (error) {
+      console.error('Erro ao atualizar competição:', error);
     }
-    setShowEditForm(false);
   };
 
-  const handleDelete = () => {
-    // TODO: delete competition via API
-    console.log('Deleting competition:', competition.id);
-    if (onDelete) {
-      onDelete(competition.id);
+  const handleDelete = async () => {
+    try {
+      // A API já foi chamada no CompetitionEditForm, aqui apenas atualizamos o estado local
+      console.log('Deleting competition:', competition.id);
+      if (onDelete) {
+        onDelete(competition.id);
+      }
+      onBack();
+    } catch (error) {
+      console.error('Erro ao excluir competição:', error);
     }
-    onBack();
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

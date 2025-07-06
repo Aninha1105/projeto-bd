@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { X, Calendar, MapPin, Clock, Users, FileText, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Calendar, MapPin, Clock, Users, FileText, Trash2, Loader2 } from 'lucide-react';
 import { Competition, CompetitionFormData } from '../types';
-import { mockAuthUsers } from '../data/mockData';
+import { api } from '../api/api';
 
 interface CompetitionEditFormProps {
   competition: Competition;
@@ -28,9 +28,27 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // TODO: fetch organizers from API
-  const organizers = mockAuthUsers.filter(user => user.role === 'colaborador');
+  // Buscar equipes da API
+  useEffect(() => {
+    async function fetchTeams() {
+      try {
+        const res = await api.get('/equipes');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = res.data.map((e: any) => ({
+          id: e.id_equipe.toString(),
+          name: e.nome,
+        }));
+        setTeams(data);
+      } catch (err) {
+        console.error('Erro ao buscar equipes:', err);
+        setErrors({ general: 'Erro ao carregar equipes. Tente novamente.' });
+      }
+    }
+    fetchTeams();
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -66,14 +84,38 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
       newErrors.description = 'Descrição é obrigatória';
     }
 
+    if (!formData.teamId) {
+      newErrors.teamId = 'Selecione uma equipe responsável';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      setIsLoading(true);
+      try {
+        // Chamar a API para atualizar a competição
+        await api.put(`/competicoes/${competition.id}`, {
+          nome: formData.name,
+          data: formData.date,
+          local: formData.location,
+          horario: formData.time,
+          max_participantes: formData.maxParticipants,
+          descricao: formData.description,
+          id_equipe: parseInt(formData.teamId, 10),
+        });
+
+        // Chamar o callback de sucesso
+        onSubmit(formData);
+      } catch (error) {
+        console.error('Erro ao atualizar competição:', error);
+        setErrors({ general: 'Erro ao atualizar competição. Verifique os dados e tente novamente.' });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -83,11 +125,26 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' });
     }
+    if (errors.general) {
+      setErrors({ ...errors, general: '' });
+    }
   };
 
-  const handleDelete = () => {
-    onDelete();
-    setShowDeleteConfirm(false);
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      // Chamar a API para excluir a competição
+      await api.delete(`/competicoes/${competition.id}`);
+      
+      // Chamar o callback de sucesso
+      onDelete();
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Erro ao excluir competição:', error);
+      alert('Erro ao excluir competição. Tente novamente.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -101,12 +158,14 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
                 onClick={() => setShowDeleteConfirm(true)}
                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="Excluir competição"
+                disabled={isLoading}
               >
                 <Trash2 className="h-5 w-5" />
               </button>
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={isLoading}
               >
                 <X className="h-5 w-5 text-gray-500" />
               </button>
@@ -116,6 +175,13 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Error geral */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {errors.general}
+            </div>
+          )}
+
           {/* Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -131,6 +197,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Ex: Maratona Feminina de Programação 2024"
+              disabled={isLoading}
             />
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
           </div>
@@ -150,6 +217,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   errors.date ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={isLoading}
               />
               {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
             </div>
@@ -167,6 +235,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   errors.time ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={isLoading}
               />
               {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time}</p>}
             </div>
@@ -187,6 +256,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
                 errors.location ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Ex: São Paulo, SP"
+              disabled={isLoading}
             />
             {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
           </div>
@@ -207,6 +277,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                 errors.maxParticipants ? 'border-red-500' : 'border-gray-300'
               }`}
+              disabled={isLoading}
             />
             {errors.maxParticipants && <p className="text-red-500 text-sm mt-1">{errors.maxParticipants}</p>}
           </div>
@@ -226,6 +297,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
                 errors.description ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Descreva os objetivos, regras e informações importantes da competição..."
+              disabled={isLoading}
             />
             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
           </div>
@@ -243,6 +315,7 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 ${
               errors.teamId ? 'border-red-500' : 'border-gray-300'
               }`}
+              disabled={isLoading}
             >
               <option value="">Selecione uma equipe</option>
               {teams.map((team) => (
@@ -263,14 +336,23 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
               type="button"
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              disabled={isLoading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 font-medium"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              disabled={isLoading}
             >
-              Salvar Alterações
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar Alterações'
+              )}
             </button>
           </div>
         </form>
@@ -294,14 +376,23 @@ const CompetitionEditForm: React.FC<CompetitionEditFormProps> = ({
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  disabled={isDeleting}
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  disabled={isDeleting}
                 >
-                  Excluir
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Excluindo...
+                    </>
+                  ) : (
+                    'Excluir'
+                  )}
                 </button>
               </div>
             </div>

@@ -65,6 +65,32 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleUpdateCompetition = async (updatedCompetition: Competition) => {
+    try {
+      // Atualizar o estado local da competição selecionada
+      setSelectedCompetition(updatedCompetition);
+      
+      // Se estiver na lista de competições, atualizar também
+      // (isso seria útil se tivéssemos um estado global de competições)
+      console.log('Competição atualizada:', updatedCompetition);
+    } catch (err) {
+      console.error('Erro ao atualizar competição:', err);
+      alert('Erro ao atualizar competição. Tente novamente.');
+    }
+  };
+
+  const handleDeleteCompetition = async (competitionId: string) => {
+    try {
+      // A exclusão já foi feita na API pelo CompetitionEditForm
+      // Aqui apenas limpamos o estado local
+      setSelectedCompetition(null);
+      console.log('Competição excluída:', competitionId);
+    } catch (err) {
+      console.error('Erro ao excluir competição:', err);
+      alert('Erro ao excluir competição. Tente novamente.');
+    }
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
       case 'dashboard':
@@ -81,6 +107,8 @@ const AppContent: React.FC = () => {
           <CompetitionDetail 
             competition={selectedCompetition} 
             onBack={handleBackToCompetitions}
+            onUpdate={handleUpdateCompetition}
+            onDelete={handleDeleteCompetition}
           />
         ) : (
           <CompetitionsList 
