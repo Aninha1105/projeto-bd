@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Users, User, Check } from 'lucide-react';
 import { Team } from '../types';
-import { mockAuthUsers } from '../data/mockData';
+import { colaboradoresApi, Colaborador } from '../api/colaboradores';
 
 interface TeamFormProps {
   team?: Team | null;
@@ -15,9 +15,35 @@ const TeamForm: React.FC<TeamFormProps> = ({ team, onClose, onSubmit }) => {
     collaborators: team?.collaborators || []
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // TODO: fetch organizers from API
-  const organizers = mockAuthUsers.filter(user => user.role === 'colaborador');
+  const isEditing = !!team;
+
+  useEffect(() => {
+    const fetchColaboradores = async () => {
+      setLoading(true);
+      try {
+        const data = isEditing 
+          ? await colaboradoresApi.getColaboradores()
+          : await colaboradoresApi.getColaboradoresDisponiveis();
+        setColaboradores(data);
+      } catch (error) {
+        setColaboradores([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchColaboradores();
+  }, [isEditing]);
+
+  // Mapeia colaboradores para o formato usado no formulário
+  const organizers = colaboradores.map(colab => ({
+    id: String(colab.id_usuario),
+    name: colab.usuario.nome,
+    university: colab.instituicao || '',
+    photo: colab.usuario.foto || undefined
+  }));
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -56,8 +82,6 @@ const TeamForm: React.FC<TeamFormProps> = ({ team, onClose, onSubmit }) => {
     
     handleInputChange('collaborators', updatedCollaborators);
   };
-
-  const isEditing = !!team;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -106,7 +130,12 @@ const TeamForm: React.FC<TeamFormProps> = ({ team, onClose, onSubmit }) => {
               Colaboradores *
             </label>
             <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-3">
-              {organizers.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-4">
+                  <User className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Carregando colaboradores...</p>
+                </div>
+              ) : colaboradores.length > 0 ? (
                 organizers.map((organizer) => (
                   <label key={organizer.id} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
                     <div className="relative">

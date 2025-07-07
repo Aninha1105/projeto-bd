@@ -1,20 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Users, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { mockTeams, mockAuthUsers } from '../data/mockData';
 import { Team } from '../types';
 import TeamForm from './TeamForm';
+import { equipesApi } from '../api/equipes';
+import { colaboradoresApi, Colaborador } from '../api/colaboradores';
 
 const TeamManagement: React.FC = () => {
   const { user } = useAuth();
-  const [teams, setTeams] = useState(mockTeams);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTeamForm, setShowTeamForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
 
-  // TODO: fetch teams from API
-  const collaborators = mockAuthUsers.filter(u => u.role === 'colaborador');
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [equipesData, colaboradoresData] = await Promise.all([
+          equipesApi.listarEquipes(),
+          colaboradoresApi.getColaboradores()
+        ]);
+        
+        // Mapear equipes do backend para o formato do frontend
+        const teamsMapped = equipesData.map(equipe => ({
+          id: equipe.id_equipe.toString(),
+          name: equipe.nome,
+          memberCount: colaboradoresData.filter(c => c.id_equipe === equipe.id_equipe).length,
+          collaborators: colaboradoresData
+            .filter(c => c.id_equipe === equipe.id_equipe)
+            .map(c => c.id_usuario.toString())
+        }));
+        
+        setTeams(teamsMapped);
+        setColaboradores(colaboradoresData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   const filteredTeams = teams.filter(team =>
     team.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -24,46 +55,78 @@ const TeamManagement: React.FC = () => {
     return user?.role === 'admin' || user?.role === 'colaborador';
   };
 
-  const handleCreateTeam = (teamData: { name: string; collaborators: string[] }) => {
-    // TODO: create team via API
-    const newTeam: Team = {
-      id: Date.now().toString(),
-      name: teamData.name,
-      memberCount: teamData.collaborators.length,
-      collaborators: teamData.collaborators,
-    };
-    
-    setTeams([...teams, newTeam]);
-    setShowTeamForm(false);
-    console.log('Team created:', newTeam);
+  const handleCreateTeam = async (teamData: { name: string; collaborators: string[] }) => {
+    try {
+      // Enviar para o backend
+      const equipe = await equipesApi.criarEquipe({
+        nome: teamData.name,
+        colaboradores: teamData.collaborators.map(id => Number(id)),
+      });
+      // Atualizar lista local (opcional)
+      setTeams([...teams, {
+        id: equipe.id_equipe.toString(),
+        name: equipe.nome,
+        memberCount: teamData.collaborators.length,
+        collaborators: teamData.collaborators,
+      }]);
+      setShowTeamForm(false);
+      console.log('Equipe criada:', equipe);
+    } catch (error) {
+      alert('Erro ao criar equipe!');
+    }
   };
 
-  const handleEditTeam = (teamData: { name: string; collaborators: string[] }) => {
+  const handleEditTeam = async (teamData: { name: string; collaborators: string[] }) => {
     if (!editingTeam) return;
     
-    // TODO: update team via API
-    const updatedTeam = {
-      ...editingTeam,
-      name: teamData.name,
-      collaborators: teamData.collaborators,
-      memberCount: teamData.collaborators.length
-    };
-    
-    setTeams(teams.map(team => 
-      team.id === editingTeam.id ? updatedTeam : team
-    ));
-    setEditingTeam(null);
-    setShowTeamForm(false);
-    console.log('Team updated:', updatedTeam);
+    try {
+      // Enviar para o backend
+      const equipe = await equipesApi.editarEquipe(Number(editingTeam.id), {
+        nome: teamData.name,
+        colaboradores: teamData.collaborators.map(id => Number(id)),
+      });
+      
+      // Atualizar lista local
+      const updatedTeam = {
+        ...editingTeam,
+        name: equipe.nome,
+        collaborators: teamData.collaborators,
+        memberCount: teamData.collaborators.length
+      };
+      
+      setTeams(teams.map(team => 
+        team.id === editingTeam.id ? updatedTeam : team
+      ));
+      setEditingTeam(null);
+      setShowTeamForm(false);
+      console.log('Equipe atualizada:', equipe);
+    } catch (error) {
+      alert('Erro ao atualizar equipe!');
+    }
   };
 
-  const handleDeleteTeam = (teamId: string) => {
-    // TODO: delete team via API
-    setTeams(teams.filter(team => team.id !== teamId));
-    setShowDeleteConfirm(null);
-    console.log('Team deleted:', teamId);
+  const handleDeleteTeam = async (teamId: string) => {
+    try {
+      // Enviar para o backend
+      await equipesApi.excluirEquipe(Number(teamId));
+      
+      // Atualizar lista local
+      setTeams(teams.filter(team => team.id !== teamId));
+      setShowDeleteConfirm(null);
+      console.log('Equipe excluída:', teamId);
+    } catch (error) {
+      alert('Erro ao excluir equipe!');
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">Carregando equipes...</p>
+      </div>
+    );
+  }
 
   if (!canManageTeams()) {
     return (
@@ -150,11 +213,11 @@ const TeamManagement: React.FC = () => {
                 {team.collaborators.length > 0 ? (
                   <div className="space-y-1">
                     {team.collaborators.slice(0, 3).map(collaboratorId => {
-                      const collaborator = collaborators.find(c => c.id === collaboratorId);
+                      const collaborator = colaboradores.find(c => c.id_usuario.toString() === collaboratorId);
                       return collaborator ? (
                         <div key={collaboratorId} className="flex items-center space-x-2">
                           <User className="h-3 w-3" />
-                          <span>{collaborator.name}</span>
+                          <span>{collaborator.usuario.nome}</span>
                         </div>
                       ) : null;
                     })}
@@ -174,12 +237,12 @@ const TeamManagement: React.FC = () => {
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-600">Submissões</p>
-                  <p className="font-medium text-gray-900">{team.totalSubmissions}</p>
+                  <p className="text-gray-600">Membros</p>
+                  <p className="font-medium text-gray-900">{team.memberCount}</p>
                 </div>
                 <div>
-                  <p className="text-gray-600">Ranking</p>
-                  <p className="font-medium text-gray-900">#{team.ranking}</p>
+                  <p className="text-gray-600">ID</p>
+                  <p className="font-medium text-gray-900">#{team.id}</p>
                 </div>
               </div>
             </div>

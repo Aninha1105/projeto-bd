@@ -111,7 +111,7 @@ class EquipeBase(BaseModel):
     nome: str
 
 class EquipeCreate(EquipeBase):
-    pass
+    colaboradores: list[int] = []
 
 class EquipeRead(EquipeBase):
     id_equipe: int

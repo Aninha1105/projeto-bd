@@ -131,15 +131,36 @@ def get_equipe(db: Session, equipe_id: int):
 
 def create_equipe(db: Session, e: schemas.EquipeCreate):
     db_e = models.EquipeColaboradores(nome=e.nome)
-    db.add(db_e); db.commit(); db.refresh(db_e)
+    db.add(db_e)
+    db.commit()
+    db.refresh(db_e)
+    # Associar colaboradores à equipe
+    if hasattr(e, 'colaboradores') and e.colaboradores:
+        db.query(models.Colaborador).filter(models.Colaborador.id_usuario.in_(e.colaboradores)).update({models.Colaborador.id_equipe: db_e.id_equipe}, synchronize_session=False)
+        db.commit()
     return db_e
 
 def update_equipe(db: Session, eq_id: int, e_in: schemas.EquipeCreate):
     db_e = get_equipe(db, eq_id)
     if not db_e:
         return None
+    
+    # Atualizar nome da equipe
     db_e.nome = e_in.nome
-    db.commit(); db.refresh(db_e)
+    db.commit()
+    db.refresh(db_e)
+    
+    # Atualizar colaboradores associados à equipe
+    if hasattr(e_in, 'colaboradores') and e_in.colaboradores is not None:
+        # Primeiro, remover todos os colaboradores desta equipe
+        db.query(models.Colaborador).filter(models.Colaborador.id_equipe == eq_id).update({models.Colaborador.id_equipe: None}, synchronize_session=False)
+        
+        # Depois, associar os novos colaboradores
+        if e_in.colaboradores:
+            db.query(models.Colaborador).filter(models.Colaborador.id_usuario.in_(e_in.colaboradores)).update({models.Colaborador.id_equipe: eq_id}, synchronize_session=False)
+        
+        db.commit()
+    
     return db_e
 
 
