@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, Upload, User, Mail, Calendar, GraduationCap, Camera } from 'lucide-react';
 import { Competition } from '../types';
 import { mockUniversities } from '../data/mockData';
+import { inscricoesApi, InscricaoData } from '../api/inscricoes';
+import Toast from './Toast';
 
 interface RegistrationFormProps {
   competition: Competition;
@@ -20,6 +22,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ competition, onClos
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [dragActive, setDragActive] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error';
+    isVisible: boolean;
+  }>({
+    message: '',
+    type: 'success',
+    isVisible: false
+  });
 
   // TODO: fetch universities from API
   const universities = mockUniversities;
@@ -53,11 +64,33 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ competition, onClos
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // TODO: submit to API
-      onSubmit(formData);
+      try {
+        const inscricaoData: InscricaoData = {
+          name: formData.name,
+          email: formData.email,
+          birthDate: formData.birthDate,
+          university: formData.university,
+          photo: formData.photo
+        };
+        
+        await inscricoesApi.createInscricao(competition.id, inscricaoData);
+        setToast({
+          message: 'Inscrição criada com sucesso!',
+          type: 'success',
+          isVisible: true
+        });
+        onSubmit(formData);
+      } catch (error) {
+        console.error('Erro ao criar inscrição:', error);
+        setToast({
+          message: 'Erro ao criar inscrição. Tente novamente.',
+          type: 'error',
+          isVisible: true
+        });
+      }
     }
   };
 
@@ -281,6 +314,13 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ competition, onClos
           </div>
         </form>
       </div>
+      
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </div>
   );
 };

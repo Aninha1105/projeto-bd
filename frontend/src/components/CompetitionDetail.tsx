@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import RegistrationForm from './RegistrationForm';
 import SponsorshipForm from './SponsorshipForm';
 import { api } from '../api/api';
+import { inscricoesApi } from '../api/inscricoes';
 import CompetitionEditForm from './CompetitionEditForm';
 
 interface CompetitionDetailProps {
@@ -29,20 +30,20 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
 
     const fetchRelatedData = async () => {
       try {
-        const [inscRes, patrocRes] = await Promise.all([
-          api.get(`/inscricoes/competicao/${competition.id}`),
+        const [inscricoes, patrocRes] = await Promise.all([
+          inscricoesApi.getInscricoesByCompeticao(competition.id),
           api.get(`/competicaopatrocinador/competicao/${competition.id}`)
         ]);
 
         // Mapear os dados recebidos para o formato usado nos components
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setParticipants(inscRes.data.map((inscricao: any) => ({
-          id: inscricao.participante.id,
+        const participantesAtualizados = inscricoes.map((inscricao) => ({
+          id: inscricao.participante.id_usuario.toString(),
           name: inscricao.participante.usuario.nome,
           email: inscricao.participante.usuario.email,
           photo: inscricao.participante.usuario.foto,
-          university: inscricao.participante.universidade,
-        })));
+          university: inscricao.participante.instituicao || 'Não informado',
+        }));
+        setParticipants(participantesAtualizados);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setSponsorships(patrocRes.data.map((patrocinio: any) => ({
@@ -52,7 +53,6 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
           // sponsorPhoto: patrocinio.patrocinador.usuario.foto, // Comentado para evitar erro
           amount: patrocinio.contribuicao,
         })));
-
 
       } catch (error) {
         console.error("Erro ao carregar dados relacionados:", error);
@@ -113,12 +113,19 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRegistrationSubmit = async (data: any) => {
     try {
-      await api.post(`/competicoes/${competition.id}/inscricoes`, data);
       setShowRegistrationForm(false);
-      const res = await api.get(`/inscricoes/competicao/${competition.id}`);
-      setParticipants(res.data);
+      // Recarregar a lista de participantes
+      const inscricoes = await inscricoesApi.getInscricoesByCompeticao(competition.id);
+      const participantesAtualizados = inscricoes.map((inscricao) => ({
+        id: inscricao.participante.id_usuario.toString(),
+        name: inscricao.participante.usuario.nome,
+        email: inscricao.participante.usuario.email,
+        photo: inscricao.participante.usuario.foto,
+        university: inscricao.participante.instituicao || 'Não informado',
+      }));
+      setParticipants(participantesAtualizados);
     } catch (err) {
-      console.error('Erro ao registrar participante', err);
+      console.error('Erro ao atualizar lista de participantes', err);
     }
   };
 
