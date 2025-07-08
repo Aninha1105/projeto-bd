@@ -102,28 +102,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Ações Rápidas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors text-left group">
-            <Trophy className="h-6 w-6 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
-            <h3 className="font-medium text-gray-900">Nova Competição</h3>
-            <p className="text-sm text-gray-600">Cadastrar novo evento</p>
-          </button>
-          <button className="p-4 border border-pink-200 rounded-lg hover:bg-pink-50 transition-colors text-left group">
-            <Users className="h-6 w-6 text-pink-600 mb-2 group-hover:scale-110 transition-transform" />
-            <h3 className="font-medium text-gray-900">Aprovar Inscrições</h3>
-            <p className="text-sm text-gray-600">Revisar participantes</p>
-          </button>
-          <button className="p-4 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors text-left group">
-            <Code className="h-6 w-6 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
-            <h3 className="font-medium text-gray-900">Resultados</h3>
-            <p className="text-sm text-gray-600">Validar submissões</p>
-          </button>
-        </div>
-      </div>
-
       {/* Recent Activity */}
       <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Atividade Recente</h2>
