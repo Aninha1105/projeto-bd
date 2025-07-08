@@ -57,7 +57,7 @@ const CompetitionsList: React.FC<CompetitionsListProps> = ({ onViewDetails, onCr
       const search = searchTerm.toLowerCase();
       return (
         (name.includes(search) || loc.includes(search)) &&
-        (!locationFilter || c.location === locationFilter) &&
+        (!locationFilter || loc.includes(locationFilter.toLowerCase())) &&
         (!dateFilter || c.date === dateFilter)
       );
     });

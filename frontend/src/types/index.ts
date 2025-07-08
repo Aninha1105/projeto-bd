@@ -102,3 +102,11 @@ export interface UserRegistrationData {
   institution?: string;
   teamId?: number;
 }
+
+export interface Problem {
+  id_problema: number;
+  titulo: string;
+  nivel: string;
+  link: string;
+  id_competicao: number;
+}

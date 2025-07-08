@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MapPin, Clock, Users, Plus, Code, Award, DollarSign, Heart, Edit, CheckCircle } from 'lucide-react';
-import { Competition, Participant, Sponsorship } from '../types';
+import { Competition, Participant, Sponsorship, Problem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import RegistrationForm from './RegistrationForm';
 import SponsorshipForm from './SponsorshipForm';
 import { api } from '../api/api';
 import { inscricoesApi } from '../api/inscricoes';
 import CompetitionEditForm from './CompetitionEditForm';
+import { problemasApi } from '../api/api';
+import ProblemForm from './ProblemForm';
 
 interface CompetitionDetailProps {
   competition: Competition;
@@ -22,6 +24,9 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [showSponsorshipForm, setShowSponsorshipForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [showProblemForm, setShowProblemForm] = useState(false);
+  const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
 
   console.log(user);
 
@@ -60,6 +65,12 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
     };
 
     fetchRelatedData();
+  }, [competition]);
+
+  useEffect(() => {
+    if (competition.finalizada) {
+      problemasApi.getProblemasByCompeticao(Number(competition.id)).then(setProblems);
+    }
   }, [competition]);
 
   const formatDate = (dateString: string) =>
@@ -163,7 +174,36 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
       alert('Erro ao finalizar competição');
     }
   };
-  
+
+  const handleAddProblem = () => {
+    setEditingProblem(null);
+    setShowProblemForm(true);
+  };
+
+  const handleEditProblem = (problem: Problem) => {
+    setEditingProblem(problem);
+    setShowProblemForm(true);
+  };
+
+  const handleDeleteProblem = async (id: number) => {
+    if (window.confirm('Tem certeza que deseja excluir este problema?')) {
+      await problemasApi.excluirProblema(id);
+      setProblems(problems.filter(p => p.id_problema !== id));
+    }
+  };
+
+  const handleProblemFormSubmit = async (data: any) => {
+    if (editingProblem) {
+      const updated = await problemasApi.editarProblema(editingProblem.id_problema, data);
+      setProblems(problems.map(p => p.id_problema === updated.id_problema ? updated : p));
+    } else {
+      const created = await problemasApi.criarProblema({ ...data, id_competicao: Number(competition.id) });
+      setProblems([...problems, created]);
+    }
+    setShowProblemForm(false);
+    setEditingProblem(null);
+  };
+
   return (
      <div className="space-y-6">
       {/* Header */}
@@ -259,6 +299,53 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
               </div>
             )}
           </div>
+
+          {/* Problemas da competição (apenas para finalizadas) */}
+          {competition.finalizada && (
+            <div className="bg-white rounded-xl shadow-sm border border-purple-100 p-6 mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Problemas da competição</h2>
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={handleAddProblem}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Adicionar Problema</span>
+                  </button>
+                )}
+              </div>
+              {problems.length === 0 ? (
+                <p className="text-gray-500">Nenhum problema cadastrado ainda.</p>
+              ) : (
+                <ul className="divide-y divide-gray-200">
+                  {problems.map(problem => (
+                    <li key={problem.id_problema} className="py-3 flex items-center justify-between">
+                      <div>
+                        <span className="font-medium text-gray-900">{problem.titulo}</span>
+                        <span className="ml-2 text-xs text-gray-500">{problem.nivel}</span>
+                        <a href={problem.link} target="_blank" rel="noopener noreferrer" className="ml-4 text-purple-600 underline">Ver enunciado</a>
+                      </div>
+                      {user?.role === 'admin' && (
+                        <div className="flex space-x-2">
+                          <button onClick={() => handleEditProblem(problem)} className="px-3 py-1 bg-blue-100 text-blue-700 rounded">Editar</button>
+                          <button onClick={() => handleDeleteProblem(problem.id_problema)} className="px-3 py-1 bg-red-100 text-red-700 rounded">Excluir</button>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {/* Modal de formulário de problema */}
+              {showProblemForm && (
+                <ProblemForm
+                  problem={editingProblem}
+                  onClose={() => { setShowProblemForm(false); setEditingProblem(null); }}
+                  onSubmit={handleProblemFormSubmit}
+                />
+              )}
+            </div>
+          )}
 
           {/* Patrocínios */}
           {sponsorships.length > 0 && (

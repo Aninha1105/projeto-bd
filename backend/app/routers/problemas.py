@@ -1,13 +1,15 @@
 # backend/app/routers/problemas.py
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
-from .. import crud, schemas
+from .. import crud, schemas, models
 from ..database import get_db
 
 router = APIRouter(prefix="/problemas", tags=["Problemas"])
 
 @router.get("/", response_model=list[schemas.ProblemaRead])
-def listar_problemas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def listar_problemas(skip: int = 0, limit: int = 100, comp_id: int = None, db: Session = Depends(get_db)):
+    if comp_id is not None:
+        return db.query(models.Problema).filter(models.Problema.id_competicao == comp_id).offset(skip).limit(limit).all()
     return crud.get_problemas(db, skip, limit)
 
 @router.get("/{problema_id}", response_model=schemas.ProblemaRead)
