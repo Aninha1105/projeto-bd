@@ -28,6 +28,8 @@ def upgrade() -> None:
             nullable=True,
         )
 
+    op.create_unique_constraint('uix_inscricao_usuario_competicao', 'inscricao', ['id_usuario', 'id_competicao'])
+
 def downgrade() -> None:
     """Downgrade schema."""
     with op.batch_alter_table('colaborador') as batch_op:
@@ -36,3 +38,5 @@ def downgrade() -> None:
             existing_type=sa.Integer(),
             nullable=False,
         )
+
+    op.drop_constraint('uix_inscricao_usuario_competicao', 'inscricao', type_='unique')

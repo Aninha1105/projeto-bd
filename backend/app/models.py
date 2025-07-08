@@ -184,6 +184,10 @@ class Inscricao(Base):
     participante = relationship("Participante", back_populates="inscricoes")
     competicao = relationship("Competicao", back_populates="inscricoes")
 
+    __table_args__ = (
+        UniqueConstraint("id_usuario", "id_competicao", name="uix_inscricao_usuario_competicao"),
+    )
+
 
 # 9. Problema
 class Problema(Base):

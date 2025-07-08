@@ -169,8 +169,8 @@ const CompetitionsList: React.FC<CompetitionsListProps> = ({ onViewDetails, onCr
                   <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(c.registrations, c.maxParticipants)}`}>{Math.round((c.registrations/c.maxParticipants)*100)}%</span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 text-xs rounded-full font-medium ${getBadge(c.status)}`}>
-                    {c.finalizada ? 'Finalizada' : (c.status.charAt(0).toUpperCase() + c.status.slice(1))}
+                  <span className={`px-3 py-1 text-xs rounded-full font-medium ${c.finalizada ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800'}`}>
+                    {c.finalizada ? 'Finalizada' : 'Em andamento'}
                   </span>
                 </td>
                 <td className="px-6 py-4">

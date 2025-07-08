@@ -9,6 +9,7 @@ import { inscricoesApi } from '../api/inscricoes';
 import CompetitionEditForm from './CompetitionEditForm';
 import { problemasApi } from '../api/api';
 import ProblemForm from './ProblemForm';
+import Toast from './Toast';
 
 interface CompetitionDetailProps {
   competition: Competition;
@@ -27,6 +28,8 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
   const [problems, setProblems] = useState<Problem[]>([]);
   const [showProblemForm, setShowProblemForm] = useState(false);
   const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   console.log(user);
 
@@ -91,6 +94,12 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
   const canRegisterAsParticipant = () => user?.role === 'participante';
 
   const totalSponsorship = sponsorships.reduce((sum, s) => sum + s.amount, 0);
+
+  // Verifica se o usuário já está inscrito
+  const isUserAlreadyRegistered = () => {
+    if (!user || user.role !== 'participante') return false;
+    return participants.some(p => p.id === user.id.toString());
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEditSubmit = async (data: any) => {
@@ -202,6 +211,27 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
     }
     setShowProblemForm(false);
     setEditingProblem(null);
+  };
+
+  const handleParticipantRegistration = async () => {
+    try {
+      await inscricoesApi.inscreverParticipante(competition.id, user.id); // Supondo que exista esse método
+      setShowConfirmModal(false);
+      setToast({ type: 'success', message: 'Inscrição realizada com sucesso!' });
+      // Atualiza lista de participantes
+      const inscricoes = await inscricoesApi.getInscricoesByCompeticao(competition.id);
+      const participantesAtualizados = inscricoes.map((inscricao) => ({
+        id: inscricao.participante.id_usuario.toString(),
+        name: inscricao.participante.usuario.nome,
+        email: inscricao.participante.usuario.email,
+        photo: inscricao.participante.usuario.foto,
+        university: inscricao.participante.instituicao || 'Não informado',
+      }));
+      setParticipants(participantesAtualizados);
+    } catch (err: any) {
+      setShowConfirmModal(false);
+      setToast({ type: 'error', message: err?.response?.data?.detail || 'Erro ao realizar inscrição.' });
+    }
   };
 
   return (
@@ -393,9 +423,9 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Participantes</h2>
               <div className="flex space-x-2">
-                {canRegisterAsParticipant() && !competition.finalizada && (
+                {canRegisterAsParticipant() && !competition.finalizada && !isUserAlreadyRegistered() && (
                   <button
-                    onClick={() => setShowRegistrationForm(true)}
+                    onClick={() => setShowConfirmModal(true)}
                     className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
                   >
                     <Plus className="h-4 w-4" />
@@ -539,6 +569,33 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
           onClose={() => setShowRegistrationForm(false)}
           onSubmit={handleRegistrationSubmit}
         />
+      )}
+      {/* Confirmação de inscrição para participante logado */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full">
+            <h2 className="text-lg font-bold mb-4">Confirmação de Inscrição</h2>
+            <p className="mb-6">Realmente deseja se inscrever nessa competição?</p>
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                onClick={() => setShowConfirmModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                onClick={handleParticipantRegistration}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Toast de feedback */}
+      {toast && (
+        <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
       )}
       {/* Sponsorship Form Modal */}
       {showSponsorshipForm && (

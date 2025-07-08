@@ -82,4 +82,14 @@ export const inscricoesApi = {
     const response = await api.get('/participantes/');
     return response.data;
   },
+
+  // Inscrever participante já logado
+  async inscreverParticipante(competitionId: string, userId: string): Promise<InscricaoResponse> {
+    const response = await api.post('/inscricoes/', {
+      id_usuario: userId,
+      id_competicao: competitionId,
+      categoria: 'individual',
+    });
+    return response.data;
+  },
 }; 
