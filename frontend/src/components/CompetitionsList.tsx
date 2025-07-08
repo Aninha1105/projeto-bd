@@ -35,7 +35,8 @@ const CompetitionsList: React.FC<CompetitionsListProps> = ({ onViewDetails, onCr
           description: c.descricao || '',
           registrations: c.num_inscritos || 0,
           maxParticipants: c.max_participantes || 0,
-          status: (c.status ?? 'upcoming').toLowerCase() as 'upcoming' | 'ongoing' | 'completed',
+          finalizada: c.finalizada ?? false,
+          status: c.finalizada ? 'completed' : (c.status ?? 'upcoming').toLowerCase(),
           createdBy: c.id_equipe?.toString(),
           collaborators: c.equipe?.colaboradores_ids?.map(String) || []
         }));
@@ -168,7 +169,9 @@ const CompetitionsList: React.FC<CompetitionsListProps> = ({ onViewDetails, onCr
                   <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(c.registrations, c.maxParticipants)}`}>{Math.round((c.registrations/c.maxParticipants)*100)}%</span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 text-xs rounded-full font-medium ${getBadge(c.status)}`}>{c.status.charAt(0).toUpperCase() + c.status.slice(1)}</span>
+                  <span className={`px-3 py-1 text-xs rounded-full font-medium ${getBadge(c.status)}`}>
+                    {c.finalizada ? 'Finalizada' : (c.status.charAt(0).toUpperCase() + c.status.slice(1))}
+                  </span>
                 </td>
                 <td className="px-6 py-4">
                   <button onClick={() => onViewDetails(c)} className="inline-flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">

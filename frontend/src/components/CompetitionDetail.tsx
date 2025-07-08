@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, Clock, Users, Plus, Code, Award, DollarSign, Heart, Edit } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, Plus, Code, Award, DollarSign, Heart, Edit, CheckCircle } from 'lucide-react';
 import { Competition, Participant, Sponsorship } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import RegistrationForm from './RegistrationForm';
@@ -68,8 +68,7 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
     });
 
   const canAddRegistration = () =>
-    user?.role === 'admin' ||
-    (user?.role === 'colaborador' && competition.collaborators?.includes(user.id));
+    !competition.finalizada && (user?.role === 'admin' || (user?.role === 'colaborador' && competition.collaborators?.includes(user.id)));
 
   const canEditCompetition = () => {
     return user?.role === 'admin' || 
@@ -144,6 +143,26 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
       console.error('Erro ao registrar patrocínio:', err);
     }
   };
+
+  const handleFinalize = async () => {
+    try {
+      await api.put(`/competicoes/${competition.id}`, {
+        nome: competition.name,
+        local: competition.location,
+        data: competition.date,
+        id_equipe: Number(competition.teamId),
+        horario: competition.time || null,
+        max_participantes: competition.maxParticipants,
+        descricao: competition.description,
+        finalizada: true
+      });
+      if (onUpdate) {
+        onUpdate({ ...competition, finalizada: true });
+      }
+    } catch (err) {
+      alert('Erro ao finalizar competição');
+    }
+  };
   
   return (
      <div className="space-y-6">
@@ -159,12 +178,15 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{competition.name}</h1>
             <p className="text-lg text-gray-600 mt-1">{formatDate(competition.date)}</p>
+            <span className={`ml-2 px-3 py-1 text-xs rounded-full font-medium ${competition.finalizada ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800'}`}>
+              {competition.finalizada ? 'Finalizada' : 'Em andamento'}
+            </span>
           </div>
         </div>
         
         {/* Edit/Delete Actions */}
-        {canEditCompetition() && (
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
+          {canEditCompetition() && (
             <button
               onClick={() => setShowEditForm(true)}
               className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
@@ -172,8 +194,17 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
               <Edit className="h-4 w-4" />
               <span>Editar</span>
             </button>
-          </div>
-        )}
+          )}
+          {user?.role === 'admin' && !competition.finalizada && (
+            <button
+              onClick={handleFinalize}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-all duration-200"
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span>Finalizar</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -275,7 +306,7 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Participantes</h2>
               <div className="flex space-x-2">
-                {canRegisterAsParticipant() && (
+                {canRegisterAsParticipant() && !competition.finalizada && (
                   <button
                     onClick={() => setShowRegistrationForm(true)}
                     className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg"
@@ -415,7 +446,7 @@ const CompetitionDetail: React.FC<CompetitionDetailProps> = ({ competition, onBa
 
       {/* Modais */}
       {/* Registration Form Modal */}
-      {showRegistrationForm && (
+      {showRegistrationForm && !competition.finalizada && (
         <RegistrationForm
           competition={competition}
           onClose={() => setShowRegistrationForm(false)}

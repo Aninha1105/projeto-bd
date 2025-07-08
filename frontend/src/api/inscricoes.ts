@@ -76,4 +76,10 @@ export const inscricoesApi = {
   async deleteInscricao(inscricaoId: number): Promise<void> {
     await api.delete(`/inscricoes/${inscricaoId}`);
   },
+
+  // Buscar todos os participantes
+  async getAllParticipantes() {
+    const response = await api.get('/participantes/');
+    return response.data;
+  },
 }; 

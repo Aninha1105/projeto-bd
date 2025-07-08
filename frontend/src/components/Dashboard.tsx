@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trophy, Users, Code, Award } from 'lucide-react';
 import { mockDashboardStats } from '../data/mockData';
+import { api } from '../api/api';
+import { inscricoesApi } from '../api/inscricoes';
+import { equipesApi } from '../api/equipes';
 
 const Dashboard: React.FC = () => {
+  const [totalCompetitions, setTotalCompetitions] = useState(0);
+  const [activeParticipants, setActiveParticipants] = useState(0);
+  const [registeredTeams, setRegisteredTeams] = useState(0);
+
+  useEffect(() => {
+    // Buscar competições
+    api.get('/competicoes/').then(res => setTotalCompetitions(res.data.length));
+    // Buscar participantes
+    inscricoesApi.getAllParticipantes().then(res => setActiveParticipants(res.length));
+    // Buscar equipes
+    equipesApi.listarEquipes().then(res => setRegisteredTeams(res.length));
+  }, []);
+
   // TODO: fetch dashboard stats from API
   const stats = mockDashboardStats;
 
@@ -53,21 +69,21 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Total de Competições"
-          value={stats.totalCompetitions}
+          value={totalCompetitions}
           icon={Trophy}
           color="bg-purple-500"
           description="Eventos cadastrados"
         />
         <StatCard
           title="Participantes Ativas"
-          value={stats.activeParticipants}
+          value={activeParticipants}
           icon={Users}
           color="bg-pink-500"
           description="Programadoras registradas"
         />
         <StatCard
           title="Equipes Cadastradas"
-          value={stats.registeredTeams}
+          value={registeredTeams}
           icon={Code}
           color="bg-indigo-500"
           description="Times participantes"

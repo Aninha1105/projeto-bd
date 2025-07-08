@@ -3,7 +3,7 @@
 from sqlalchemy import (
     Column, Integer, String, Date, DECIMAL,
     ForeignKey, Enum, LargeBinary, DateTime, UniqueConstraint,
-    Time, Text
+    Time, Text, Boolean
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -133,6 +133,7 @@ class Competicao(Base):
     horario = Column(Time, nullable=True)
     max_participantes = Column(Integer, nullable=True)
     descricao = Column(Text, nullable=True)
+    finalizada = Column(Boolean, default=False, nullable=False)
 
     equipe = relationship("EquipeColaboradores", back_populates="competicoes")
     patrocinadores = relationship("CompeticaoPatrocinador", back_populates="competicao")
@@ -148,10 +149,10 @@ class Competicao(Base):
     @hybrid_property
     def status(self):
         hoje = datetime.today().date()
-        if self.data > hoje:
-            return "Próxima"
-        elif self.data == hoje:
-            return "Hoje"
+        if self.finalizada:
+            return "Finalizada"
+        if self.data >= hoje:
+            return "Em andamento"
         else:
             return "Finalizada"
 

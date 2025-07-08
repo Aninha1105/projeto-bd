@@ -14,6 +14,7 @@ class CompeticaoBase(BaseModel):
     horario: Optional[time] = None
     max_participantes: Optional[int] = None
     descricao: Optional[str] = None
+    finalizada: bool = False
 
 class CompeticaoCreate(CompeticaoBase):
     pass

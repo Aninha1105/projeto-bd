@@ -11,6 +11,7 @@ export interface Competition {
   description?: string;
   teamId: string;
   status: 'upcoming' | 'ongoing' | 'completed';
+  finalizada: boolean;
   createdBy?: string;
   collaborators?: string[];
   sponsorships?: Sponsorship[];

@@ -20,7 +20,8 @@ def create_competicao(db: Session, comp: schemas.CompeticaoCreate):
         id_equipe=comp.id_equipe,
         horario=comp.horario,
         max_participantes=comp.max_participantes,
-        descricao=comp.descricao
+        descricao=comp.descricao,
+        finalizada=comp.finalizada
     )
     db.add(db_comp)
     db.commit()
