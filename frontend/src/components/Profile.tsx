@@ -43,6 +43,7 @@ const Profile: React.FC = () => {
         if (u.tipo === 'participante') {
           const res = await api.get(`/participantes/${authUser.id}`);
           university = res.data.instituicao;
+          // Corrija o acesso aos campos aninhados
           stats.numInscricoes = res.data.num_competicoes;
           stats.numSubmissoes = res.data.num_submissoes;
         } else if (u.tipo === 'colaborador') {

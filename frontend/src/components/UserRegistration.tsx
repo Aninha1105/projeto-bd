@@ -71,7 +71,6 @@ const UserRegistration: React.FC<UserRegistrationProps> = ({ onClose, onSubmit }
     setLoading(true);
     try {
       const roleMap = {
-        admin: 'administrador',
         organizer: 'colaborador',
         participant: 'participante',
         sponsor: 'patrocinador',
@@ -141,7 +140,6 @@ const UserRegistration: React.FC<UserRegistrationProps> = ({ onClose, onSubmit }
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'admin': return 'Administrador';
       case 'organizer': return 'Colaborador';
       case 'participant': return 'Participante';
       case 'sponsor': return 'Patrocinador';
@@ -272,8 +270,9 @@ const UserRegistration: React.FC<UserRegistrationProps> = ({ onClose, onSubmit }
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tipo de Usuário *
               </label>
+              <div className="flex items-center justify-between mb-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {(['admin', 'organizer', 'participant', 'sponsor'] as const).map((role) => (
+                {(['organizer', 'participant', 'sponsor'] as const).map((role) => (
                   <label key={role} className="cursor-pointer">
                     <input
                       type="radio"
@@ -292,6 +291,7 @@ const UserRegistration: React.FC<UserRegistrationProps> = ({ onClose, onSubmit }
                     </div>
                   </label>
                 ))}
+              </div>
               </div>
             </div>
           </div>

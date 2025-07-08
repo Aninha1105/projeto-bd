@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Code, AlertCircle, Loader, UserPlus} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import UserRegistration from './UserRegistration';
-import { UserRegistrationData } from '../types';
 
 const Login: React.FC = () => {
   const { login, isLoading } = useAuth();

@@ -96,7 +96,7 @@ export interface UserRegistrationData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'admin' | 'organizer' | 'participant' | 'sponsor';
+  role: 'organizer' | 'participant' | 'sponsor';
   photo?: File | null;
   collaboratorRole?: 'setter' | 'tester' | 'organizador' | 'professor';
   institution?: string;
